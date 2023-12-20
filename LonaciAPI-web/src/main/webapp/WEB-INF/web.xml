@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://java.sun.com/xml/ns/javaee"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         version="2.5">
+    <display-name>LONACI-API-WS</display-name>
+    <context-param>
+        <param-name>org.restlet.clients</param-name>
+        <param-value>CLAP HTTP HTTPS</param-value>
+    </context-param>
+
+    <servlet>
+        <servlet-name>dispatcher</servlet-name>
+        <servlet-class>
+            org.springframework.web.servlet.DispatcherServlet
+        </servlet-class>
+        <init-param>
+            <param-name>contextConfigLocation</param-name>
+            <param-value>/WEB-INF/springmvc-servlet.xml</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>dispatcher</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
+    <!--<servlet>
+        <servlet-name>default</servlet-name>
+        <servlet-class>io.undertow.servlet.handlers.DefaultServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/docs/*</url-pattern>
+    </servlet-mapping> -->
+    <!-- CORS FILTER -->
+    <filter>
+        <filter-name>CorsFilter</filter-name>
+        <filter-class>sn.intouch.gu.lonaciapi.ws.config.CORSFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>CorsFilter</filter-name>
+        <url-pattern>*</url-pattern>
+    </filter-mapping>
+    <!-- END CORS FILTER -->
+
+</web-app>
