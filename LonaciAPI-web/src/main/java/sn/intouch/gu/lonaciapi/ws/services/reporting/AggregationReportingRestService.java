@@ -7,36 +7,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
+import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxService;
 import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parametre;
 import sn.intouch.gu.lonaciapi.ejb.parameter.services.ParameterService;
 import sn.intouch.gu.lonaciapi.ws.constants.AppConstants;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
-import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @RestController
-public class NotificationReportingRestService {
-    private final LonaciTrxService lonaciNotifService = (LonaciTrxService) JNDIUtils.lookUpEJB(EJBRegistry.LonaciTrxServiceBean);
+public class AggregationReportingRestService {
+    private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
     private final ParameterService parameterService = (ParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ParameterServiceBean);
 
 
-    @RequestMapping(value = {"/api/v1/filter"}, method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public ResponseEntity<APIResponse<PaginationResponse<List<LonaciTrx>>>> findAllWithPagination(
-            @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER, required = false) int page,
-            @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int size,
-            @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
-            @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir,
+    @RequestMapping(value = {"/api/v1/aggregation/curve"}, method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<APIResponse<List<Map<String, String>>>> findAllWithPagination(
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
-
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "grain", required = false) String grain
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
@@ -51,17 +49,17 @@ public class NotificationReportingRestService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(startDate, endDate, operator, type, sortBy, sortDir, size, page);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, operator, type);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
 
     private Long getDateIntervalInMillis() {
-        Parametre parametre = parameterService.getParameterByCode("PARAM_TWO_DATES_INTERVAL_IN_DAYS");
+        Parametre parametre = parameterService.getParameterByCode("PARAM_CURVE_DATES_INTERVAL_IN_DAYS");
         if (parametre != null) {
-            return (long) (parametre.getPrmValue() * 24 * 3600 * 1000);
+            return ((long) parametre.getPrmValue() * 24 * 3600 * 1000);
         }
-        return AppConstants.ONE_DAY_IN_MILLIS;
+        return AppConstants.THIRTY_DAYS_IN_MILLIS;
     }
 
 }

@@ -1,0 +1,8 @@
+{
+  "realm": "sso-intouch",
+  "bearer-only": true,
+  "auth-server-url": "https://dev-sso.gutouch.net/auth/",
+  "ssl-required": "external",
+  "resource": "lona-api",
+  "confidential-port": 0
+}

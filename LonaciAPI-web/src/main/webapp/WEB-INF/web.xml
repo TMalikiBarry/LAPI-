@@ -9,6 +9,7 @@
         <param-value>CLAP HTTP HTTPS</param-value>
     </context-param>
 
+    <!-- SPRING BOOT DISPATCHER -->
     <servlet>
         <servlet-name>dispatcher</servlet-name>
         <servlet-class>
@@ -20,20 +21,21 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
     <servlet-mapping>
         <servlet-name>dispatcher</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
 
-    <!--<servlet>
-        <servlet-name>default</servlet-name>
-        <servlet-class>io.undertow.servlet.handlers.DefaultServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>default</servlet-name>
-        <url-pattern>/docs/*</url-pattern>
-    </servlet-mapping> -->
+    <!-- KEYCLOAK FILTER -->
+    <!--<filter>
+		<filter-name>Keycloak Filter</filter-name>
+		<filter-class>org.keycloak.adapters.servlet.KeycloakOIDCFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>Keycloak Filter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>-->
+
     <!-- CORS FILTER -->
     <filter>
         <filter-name>CorsFilter</filter-name>
@@ -43,6 +45,6 @@
         <filter-name>CorsFilter</filter-name>
         <url-pattern>*</url-pattern>
     </filter-mapping>
-    <!-- END CORS FILTER -->
+
 
 </web-app>

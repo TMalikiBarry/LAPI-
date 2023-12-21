@@ -21,7 +21,7 @@
     <parent>
         <groupId>sn.intouch.gu.lonaciapi</groupId>
         <artifactId>LonaciAPI</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>${version.project}</version>
     </parent>
     <artifactId>LonaciAPI-web</artifactId>
     <packaging>war</packaging>
@@ -127,7 +127,7 @@
             <version>2.7.13</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
             <version>2.7.0</version>
@@ -136,7 +136,7 @@
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger-ui</artifactId>
             <version>2.7.0</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -151,6 +151,12 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-servlet-filter-adapter</artifactId>
+            <version>13.0.1</version>
         </dependency>
     </dependencies>
 
