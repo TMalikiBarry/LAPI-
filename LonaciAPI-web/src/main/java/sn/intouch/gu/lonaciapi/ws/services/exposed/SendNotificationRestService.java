@@ -39,7 +39,7 @@ public class SendNotificationRestService {
                 if (this.areFieldsOk(exchange)) {
                     Operator Operator = operatorService.findByOperatorID(exchange.getOperatorID());
                     if (Operator != null) {
-                        TypeTrx typeTrx = typeTrxService.getTypeTrxByCode(exchange.getType());
+                        TypeTrx typeTrx = typeTrxService.getByCode(exchange.getType());
                         if (typeTrx != null) {
                             String token = TokenGenerator.generateToken();
                             LonaciTrxTemp notif = exchange.buildTransactionTemp();

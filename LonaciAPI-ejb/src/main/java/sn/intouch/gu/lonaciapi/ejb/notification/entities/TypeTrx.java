@@ -1,21 +1,25 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.entities;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import sn.intouch.gu.lonaciapi.ejb.dto.TypeTrxDTO;
+
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Table;
-import javax.persistence.Id;
-import javax.persistence.Column;
+import java.util.Date;
+import javax.persistence.*;
 
 
 @Entity
 @Table(name="type_trx")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class TypeTrx implements Serializable{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	@Id
@@ -27,43 +31,30 @@ public class TypeTrx implements Serializable{
 	private String code;
 	
 	@Column(name="libelle")
-	private String libelle;
+	private String label;
 	
 	@Column(name="supprime")
-	private Boolean supprime;
+	@Builder.Default
+	private Boolean deleted = false;
 
-	public Long getTypeId() {
-		return typeId;
-	}
+	@Column(name = "creation_date")
+	private Date creationDate;
+	@Column(name = "modification_date")
+	private Date modificationDate;
 
-	public void setTypeId(Long typeId) {
-		this.typeId = typeId;
+	@PreUpdate
+	private void updatedDate() {
+		this.modificationDate = new Date();
 	}
-
-	public String getCode() {
-		return code;
+	@PrePersist
+	private void createdDate() {
+		this.creationDate = new Date();
+		this.modificationDate = new Date();
 	}
-
-	public void setCode(String code) {
-		this.code = code;
+	public TypeTrxDTO toDTO() {
+		return TypeTrxDTO.builder()
+				.code(code)
+				.label(label)
+				.build();
 	}
-
-	public String getLibelle() {
-		return libelle;
-	}
-
-	public void setLibelle(String libelle) {
-		this.libelle = libelle;
-	}
-
-	public Boolean getSupprime() {
-		return supprime;
-	}
-
-	public void setSupprime(Boolean supprime) {
-		this.supprime = supprime;
-	}
-	
-	
-	
 }

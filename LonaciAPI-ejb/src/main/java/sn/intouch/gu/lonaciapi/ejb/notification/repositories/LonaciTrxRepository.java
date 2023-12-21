@@ -1,4 +1,3 @@
-/*
 package sn.intouch.gu.lonaciapi.ejb.notification.repositories;
 
 import org.springframework.data.domain.Page;
@@ -16,4 +15,3 @@ public interface LonaciTrxRepository extends JpaRepository<LonaciTrx, Long>, Que
     Page<LonaciTrx> findByDateBetweenAndOperateurID(Date startDate, Date endDate, String operatorId, Pageable pageable);
     Page<LonaciTrx> findByDateBetweenAndOperateurIDAndTypeTransaction(Date startDate, Date endDate, String operatorId, String type, Pageable pageable);
 }
-*/

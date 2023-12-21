@@ -1,7 +1,12 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.TypeTrx;
+import sn.intouch.gu.lonaciapi.ejb.notification.repositories.TypeTrxRepository;
+import sn.intouch.gu.lonaciapi.ejb.operator.repositories.OperatorRepository;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -11,83 +16,37 @@ import java.util.List;
 
 
 @Stateless
-public class TypeTrxServiceBean implements TypeTrxService{
-	
-	@PersistenceContext(unitName="lonaciPU")
-	EntityManager em;
+public class TypeTrxServiceBean implements TypeTrxService {
 
-	@Override
-	public  TypeTrx getTypeTrxById(Long id) {
-		TypeTrx type = em.find(TypeTrx.class, id);
-		
-		if(type==null) 
-			throw new RuntimeException("No Transaction Type was found");
-		return type;
-	}
-	
-	@Override
-	public TypeTrx getTypeTrxByCode(String code) {
-		TypeTrx type = null;
+    @PersistenceContext(unitName = "lonaciPU")
+    EntityManager em;
 
-		try {
-			Query query = em.createQuery("from TypeTrx n where n.supprime = false and n.code = :code");
-			type = (TypeTrx) query.setParameter("code", code).getSingleResult();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+    private TypeTrxRepository typeTrxRepository;
+    @PostConstruct
+    private void init() {
+        RepositoryFactorySupport factorySupport = new JpaRepositoryFactory(em);
+        this.typeTrxRepository = factorySupport.getRepository(TypeTrxRepository.class);
+    }
 
-		return type;
-	}
-	
-	
-	@Override
-	public TypeTrx saveTypeTrx(TypeTrx type) {
-		return em.merge(type);
-	}
-	
-	
-	
-	@Override
-	public TypeTrx updateTypeTrx(TypeTrx typeTrx) {
-		return em.merge(typeTrx);
-	}
-	
-	@Override
-	public List<TypeTrx> findAll(){
-		List<TypeTrx> types = new ArrayList<TypeTrx>();
-		try {
-		Query query = em.createQuery("FROM TypeTrx a where a.supprime = false ");
-		types = query.getResultList();
-		} 
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		return types;
-	}
-	
-	@Override
-	public List<TypeTrx> filterTypeTrx(String code){
-		
-		List<TypeTrx> types = new ArrayList<TypeTrx>();
-		try {
-			String sql = "SELECT p FROM TypeTrx p where p.typeId IS NOT NULL AND p.supprime = false";
-			if(code != null) {
-				sql+=" AND p.code = :code";
-			}
-			
-			Query query = em.createQuery(sql);
-			
-			if(code != null) {
-				query.setParameter("code", code);
-			}
-			
-			types = query.getResultList();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return types;
-	}
+    @Override
+    public Iterable<TypeTrx> findAll() {
+        return typeTrxRepository.findByDeleted(false);
+    }
 
 
+    @Override
+    public TypeTrx save(TypeTrx typeTrx) {
+        return em.merge(typeTrx);
+    }
+
+    @Override
+    public TypeTrx getByCode(String code) {
+        return typeTrxRepository.findByCodeAndDeleted(code, false).orElseGet(() -> null);
+    }
+
+    @Override
+    public TypeTrx delete(TypeTrx typeTrx) {
+        typeTrx.setDeleted(true);
+        return em.merge(typeTrx);
+    }
 }

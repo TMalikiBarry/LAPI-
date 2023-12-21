@@ -26,7 +26,6 @@
         <jta-data-source>java:/LONACIDS</jta-data-source>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrxTemp</class>
-        <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.Statut</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.SuperLonaciTrx</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.TypeTrx</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.models.LonaciNotification</class>

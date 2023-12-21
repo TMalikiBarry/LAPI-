@@ -24,7 +24,7 @@ public class SendTouchPayNotificationRestService {
             .lookUpEJB(EJBRegistry.LonaciTrxTempServiceBean);
 
 
-    @RequestMapping(value = "api/v1/notify-touchpay", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v1/notify-touchpay", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public String sendNotification(@RequestBody USSDOperationExchange exchange) {
         TransactionNotifResponse response = new TransactionNotifResponse();
         try {

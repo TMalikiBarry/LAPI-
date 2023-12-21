@@ -17,7 +17,6 @@ public class OperatorServiceBean implements OperatorService {
 	EntityManager em;
 
 	private OperatorRepository operatorRepository;
-
 	@PostConstruct
 	private void init() {
 		RepositoryFactorySupport factorySupport = new JpaRepositoryFactory(em);
