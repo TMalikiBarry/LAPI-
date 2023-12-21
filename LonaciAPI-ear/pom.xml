@@ -44,7 +44,7 @@
     </dependencies>
 
     <build>
-        <finalName>${project.parent.artifactId}</finalName>
+        <finalName>${project.parent.artifactId}-${project.version}</finalName>
         <plugins>
 			<!--EAR plugin: format of output file -->
             <plugin>

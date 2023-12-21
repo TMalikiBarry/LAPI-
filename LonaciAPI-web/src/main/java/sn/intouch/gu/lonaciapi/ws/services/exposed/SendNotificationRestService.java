@@ -1,4 +1,4 @@
-package sn.intouch.gu.lonaciapi.ws.services;
+package sn.intouch.gu.lonaciapi.ws.services.exposed;
 
 import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,7 +32,7 @@ public class SendNotificationRestService {
     private final TypeTrxService typeTrxService = (TypeTrxService) JNDIUtils.lookUpEJB(EJBRegistry.TypeTrxServiceBean);
 
     @RequestMapping(value = "/api/v1/notification", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
-    public String sendNotification(@RequestBody NotificationExchange exchange) {
+    public TransactionNotifResponse sendNotification(@RequestBody NotificationExchange exchange) {
         TransactionNotifResponse response = new TransactionNotifResponse();
         try {
             if (exchange != null) {
@@ -43,7 +43,7 @@ public class SendNotificationRestService {
                         if (typeTrx != null) {
                             String token = TokenGenerator.generateToken();
                             LonaciTrxTemp notif = exchange.buildTransactionTemp();
-                            notif.setOperateurLibelle(Operator.getOperateur_libelle());
+                            notif.setOperateurLibelle(Operator.getOperatorLabel());
                             notif.setTypeTransaction(exchange.getType());
                             notif.setLonaciTransactionID(token);
                             notif.setCodeService("NO_SERVICE_CODE");
@@ -60,7 +60,7 @@ public class SendNotificationRestService {
                             response.setLonaciTransactionID(token);
                             response.setErrorCode("200");
                             response.setErrorMessage("SUCCESS");
-                            return gson.toJson(response);
+                            return response;
                         } else {
                             response.setErrorCode("404");
                             response.setErrorMessage("Transaction type not found");
@@ -84,7 +84,7 @@ public class SendNotificationRestService {
             response.setErrorCode("500");
             response.setErrorMessage("An error occurred while handling the request");
         }
-        return gson.toJson(response);
+        return response;
     }
 
     private boolean areFieldsOk(NotificationExchange exchange) {

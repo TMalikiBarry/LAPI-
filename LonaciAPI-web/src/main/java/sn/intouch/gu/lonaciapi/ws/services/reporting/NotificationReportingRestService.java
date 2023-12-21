@@ -1,4 +1,4 @@
-package sn.intouch.gu.lonaciapi.ws.services;
+package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 
 import org.springframework.http.HttpStatus;
@@ -53,7 +53,7 @@ public class NotificationReportingRestService {
 
         PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(startDate, endDate, operator, type, sortBy, sortDir, size, page);
 
-        return ResponseEntity.ok(new APIResponse<>("200", "SUCCESS", notifications));
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
 
     private Long getDateIntervalInMillis() {

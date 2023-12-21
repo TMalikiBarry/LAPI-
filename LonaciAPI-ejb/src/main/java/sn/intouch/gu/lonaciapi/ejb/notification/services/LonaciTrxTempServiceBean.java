@@ -17,8 +17,6 @@ public class LonaciTrxTempServiceBean implements LonaciTrxTempService {
 	EntityManager em;
 
 
-	//private static Logger log = Logger.getLogger(LonaciTrxTempServiceBean.class);
-
 	public LonaciTrx getTransactionById(Long id) {
 		LonaciTrx transaction = em.find(LonaciTrx.class, id);
 		if(transaction==null) 

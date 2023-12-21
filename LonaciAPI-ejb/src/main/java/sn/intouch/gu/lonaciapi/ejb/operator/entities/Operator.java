@@ -4,21 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import sn.intouch.gu.lonaciapi.ejb.dto.OperatorDTO;
 
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
-/**
- * Entity implementation class for Entity: Operateur
- *
- */
+
 @Entity
 @Table(name = "operateur")
 @AllArgsConstructor
@@ -35,14 +29,45 @@ public class Operator implements Serializable {
 	@Column(name="id")
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long Id;
-	@Column(unique = true)
-	private String operateur_id;
-	private String operateur_libelle;
-	private String operateur_token;
-	private String code_marchand;
-	private String code_reseau;
-	Boolean supprime = false;
-	private Date date_creation, date_modification;
+	@Column(name = "operateur_id", unique = true)
+	private String operatorId;
+	@Column(name = "operateur_libelle")
+	private String operatorLabel;
+	@Column(name = "operateur_token")
+	private String operatorToken;
+	@Column(name = "code_marchand")
+	private String merchantCode;
+	@Column(name = "code_reseau")
+	private String networkCode;
+	@Builder.Default
+	private Boolean supprime = false;
+	@Column(name = "date_creation")
+	@CreatedDate
+	private Date creationDate;
+	@Column(name = "date_modification")
+	private Date modificationDate;
 	private String statut;
 
+	@PreUpdate
+	private void updatedDate() {
+		this.modificationDate = new Date();
+	}
+
+	@PrePersist
+	private void createdDate() {
+		this.creationDate = new Date();
+		this.modificationDate = new Date();
+	}
+
+	public OperatorDTO toDTO() {
+		return OperatorDTO.builder()
+				.identifier(operatorId)
+				.label(operatorLabel)
+				.token(operatorToken)
+				.merchantCode(merchantCode)
+				.networkCode(networkCode)
+				.creationDate(creationDate != null ? creationDate.getTime() : 0)
+				.modificationDate(modificationDate != null ? modificationDate.getTime() : 0)
+				.build();
+	}
 }

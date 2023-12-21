@@ -1,4 +1,4 @@
-package sn.intouch.gu.lonaciapi.ws.services;
+package sn.intouch.gu.lonaciapi.ws.services.exposed;
 
 import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,8 +15,6 @@ import sn.intouch.gu.lonaciapi.ws.models.TransactionNotifResponse;
 import sn.intouch.gu.lonaciapi.ws.models.USSDOperationExchange;
 import sn.intouch.gu.lonaciapi.ws.utils.NotificationUtils;
 
-import java.util.List;
-
 @RestController
 public class SendTouchPayNotificationRestService {
     private final Gson gson = new Gson();
@@ -32,11 +30,10 @@ public class SendTouchPayNotificationRestService {
         try {
             if (exchange != null) {
                 if (this.areFieldsOk(exchange)) {
-                    List<Operator> operateurs = operatorService.filterOp(exchange.getCodeSalePoint());
-                    if (operateurs != null && !operateurs.isEmpty()) {
-                        Operator operateur = operateurs.get(0);
+                    Operator operateur = operatorService.findByOperatorID(exchange.getCodeSalePoint());
+                    if (operateur != null) {
                         LonaciTrxTemp trx = exchange.buildLonaciTrxTempFromOperation();
-                        trx.setOperateurLibelle(operateur.getOperateur_libelle());
+                        trx.setOperateurLibelle(operateur.getOperatorLabel());
                         trx.setTypeTransaction(NotificationUtils.getTypeFromServiceCode(exchange.getCodeService()));
 
                         lonaciTrxTempService.saveTransaction(trx);

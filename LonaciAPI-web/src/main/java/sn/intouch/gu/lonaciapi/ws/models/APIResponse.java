@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 public class APIResponse<T> implements Serializable{
-    private String code;
+    private Integer code;
     private String reason;
     private T data;
 }
