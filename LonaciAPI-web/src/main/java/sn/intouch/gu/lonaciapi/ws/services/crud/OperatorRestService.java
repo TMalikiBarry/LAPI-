@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.dto.OperatorDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
-import sn.intouch.gu.lonaciapi.ejb.operator.entities.Operator;
-import sn.intouch.gu.lonaciapi.ejb.operator.services.OperatorService;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
 import java.util.ArrayList;

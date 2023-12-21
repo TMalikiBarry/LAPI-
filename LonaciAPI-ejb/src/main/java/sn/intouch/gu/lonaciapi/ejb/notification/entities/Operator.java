@@ -1,4 +1,4 @@
-package sn.intouch.gu.lonaciapi.ejb.operator.entities;
+package sn.intouch.gu.lonaciapi.ejb.notification.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

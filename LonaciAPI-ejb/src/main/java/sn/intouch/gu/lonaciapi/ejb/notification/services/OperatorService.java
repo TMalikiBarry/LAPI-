@@ -1,10 +1,8 @@
-package sn.intouch.gu.lonaciapi.ejb.operator.services;
+package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
-import sn.intouch.gu.lonaciapi.ejb.operator.entities.Operator;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 
 import javax.ejb.Local;
-import javax.ejb.Remote;
-import java.util.List;
 
 @Local
 public interface OperatorService {

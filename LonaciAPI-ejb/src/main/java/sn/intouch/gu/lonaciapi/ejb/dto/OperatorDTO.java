@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import sn.intouch.gu.lonaciapi.ejb.operator.entities.Operator;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 
 import java.io.Serializable;
 

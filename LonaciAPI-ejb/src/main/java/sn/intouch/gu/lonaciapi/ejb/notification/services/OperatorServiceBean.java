@@ -1,9 +1,9 @@
-package sn.intouch.gu.lonaciapi.ejb.operator.services;
+package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import sn.intouch.gu.lonaciapi.ejb.operator.entities.Operator;
-import sn.intouch.gu.lonaciapi.ejb.operator.repositories.OperatorRepository;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
+import sn.intouch.gu.lonaciapi.ejb.notification.repositories.OperatorRepository;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;

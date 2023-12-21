@@ -4,7 +4,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 import org.springframework.stereotype.Service;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.TypeTrx;
-import sn.intouch.gu.lonaciapi.ejb.operator.entities.Operator;
 
 import java.util.Optional;
 
