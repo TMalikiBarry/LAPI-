@@ -4,6 +4,10 @@ package sn.intouch.gu.lonaciapi.ejb.bigquery;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
+import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
+import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
+import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
+import sn.intouch.gu.lonaciapi.ejb.parameter.services.ParameterService;
 
 import javax.ejb.Singleton;
 import java.io.File;
@@ -15,12 +19,20 @@ public class BigQueryConnection {
 
     public BigQueryConnection () {
     }
+
+    private static final String BIGQUERY_CONF_FILE_PATH = "BIGQUERY_CONF_FILE_PATH";
+
     private BigQuery bigQuery = null;
 
     public BigQuery getConnection() {
         if (bigQuery == null) {
+            ParameterService parameterService = (ParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ParameterServiceBean);
+            Parameter pathParam = parameterService.getParameterByCode(BIGQUERY_CONF_FILE_PATH);
+            if (pathParam == null)
+                throw new RuntimeException("Cannot find parameter of code :: " + BIGQUERY_CONF_FILE_PATH);
+
             ServiceAccountCredentials credentials;
-            File credentialsPath = new File("C:/Users/AliouneSARR/Documents/BIGQUERY/hubsoinfra-2be8d194727b.json");
+            File credentialsPath = new File(pathParam.getPrmStringValue());
 
             try (FileInputStream serviceAccountStream = new FileInputStream(credentialsPath)) {
                 credentials = ServiceAccountCredentials.fromStream(serviceAccountStream);

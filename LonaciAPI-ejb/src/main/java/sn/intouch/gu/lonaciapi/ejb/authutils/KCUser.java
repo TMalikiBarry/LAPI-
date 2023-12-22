@@ -15,7 +15,7 @@ import java.util.Set;
 import com.google.gson.Gson;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
-import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parametre;
+import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
 import sn.intouch.gu.lonaciapi.ejb.parameter.services.ParameterService;
 
 @Builder
@@ -39,7 +39,7 @@ public class KCUser implements Serializable {
     public Set<String> getBusinessRolesFromAccessToken() {
         if (!businessRoles.isEmpty()) return businessRoles;
         ParameterService parameterService = (ParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ParameterServiceBean);
-        Parametre boBusinessClientIdParam = parameterService.getParameterByCode(BO_CLIENT_ID);
+        Parameter boBusinessClientIdParam = parameterService.getParameterByCode(BO_CLIENT_ID);
         log.info("CLIENT ROLES :: " + new Gson().toJson(resourceRoles));
         if (boBusinessClientIdParam == null)
             throw new RuntimeException(BO_CLIENT_ID + " parameter not found.");

@@ -11,7 +11,7 @@ import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxService;
-import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parametre;
+import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
 import sn.intouch.gu.lonaciapi.ejb.parameter.services.ParameterService;
 import sn.intouch.gu.lonaciapi.ws.constants.AppConstants;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
@@ -57,9 +57,9 @@ public class NotificationReportingRestService {
     }
 
     private Long getDateIntervalInMillis() {
-        Parametre parametre = parameterService.getParameterByCode("PARAM_TWO_DATES_INTERVAL_IN_DAYS");
-        if (parametre != null) {
-            return (long) (parametre.getPrmValue() * 24 * 3600 * 1000);
+        Parameter parameter = parameterService.getParameterByCode("PARAM_TWO_DATES_INTERVAL_IN_DAYS");
+        if (parameter != null) {
+            return (long) (parameter.getPrmValue() * 24 * 3600 * 1000);
         }
         return AppConstants.ONE_DAY_IN_MILLIS;
     }

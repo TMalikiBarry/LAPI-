@@ -7,15 +7,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.HeaderTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
-import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
-import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
-import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxService;
-import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parametre;
+import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
 import sn.intouch.gu.lonaciapi.ejb.parameter.services.ParameterService;
 import sn.intouch.gu.lonaciapi.ws.constants.AppConstants;
+import sn.intouch.gu.lonaciapi.ws.dto.HeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
 import java.util.Date;
@@ -53,11 +52,25 @@ public class AggregationReportingRestService {
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
+    @RequestMapping(value = {"/api/v1/aggregation/header"}, method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<APIResponse<HeaderResponse>> findAllWithPagination(
+            @RequestParam(value = "operator", required = false) String operator,
+            @RequestParam(value = "type", required = false) String type
+    ) throws RuntimeException {
+
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
+                HeaderResponse.builder()
+                        .day(bigQueryService.getHeader(new Date(), operator, type, HeaderTimeEnum.DAY))
+                        .week(bigQueryService.getHeader(new Date(), operator, type, HeaderTimeEnum.WEEK))
+                        .month(bigQueryService.getHeader(new Date(), operator, type, HeaderTimeEnum.MONTH))
+                        .build()
+                ));
+    }
 
     private Long getDateIntervalInMillis() {
-        Parametre parametre = parameterService.getParameterByCode("PARAM_CURVE_DATES_INTERVAL_IN_DAYS");
-        if (parametre != null) {
-            return ((long) parametre.getPrmValue() * 24 * 3600 * 1000);
+        Parameter parameter = parameterService.getParameterByCode("PARAM_CURVE_DATES_INTERVAL_IN_DAYS");
+        if (parameter != null) {
+            return ((long) parameter.getPrmValue() * 24 * 3600 * 1000);
         }
         return AppConstants.THIRTY_DAYS_IN_MILLIS;
     }

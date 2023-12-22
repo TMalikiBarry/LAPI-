@@ -1,11 +1,12 @@
 package sn.intouch.gu.lonaciapi.ejb.parameter.services;
 
-import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parametre;
+import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import java.util.List;
 
 
 @Stateless
@@ -15,39 +16,11 @@ public class ParameterServiceBean implements ParameterService {
     EntityManager em;
 
     @Override
-    public int nextValue(String code) {
-
-        Query query = em.createQuery("SELECT p FROM Parametre p WHERE p.prmCode = :code and p.prmStatut = 1  ");
-        query.setParameter("code", code);
-        Parametre p = (Parametre) query.getSingleResult();
-
-        int i = p.getPrmValue();
-
-        p.setPrmValue(i + 1);
-        em.merge(p);
-
-        return i;
-
-    }
-
-    @Override
-    public int getValue(String code) {
-        Query query = em.createQuery("SELECT p FROM Parametre p WHERE p.prmCode = :code and p.prmStatut = 1  ");
-        query.setParameter("code", code);
-        Parametre p = (Parametre) query.getSingleResult();
-
-        int i = p.getPrmValue();
-
-
-        return i;
-    }
-
-    @Override
     public String getStringValue(String code) {
         try {
-            Query query = em.createQuery("SELECT p FROM Parametre p WHERE p.prmCode = :code and p.prmStatut = 1", Parametre.class);
+            Query query = em.createQuery("SELECT p FROM Parameter p WHERE p.prmCode = :code and p.prmStatut = 1", Parameter.class);
             query.setParameter("code", code);
-            Parametre p = (Parametre) query.getSingleResult();
+            Parameter p = (Parameter) query.getSingleResult();
             return p.getPrmStringValue();
         } catch (Exception e) {
             e.printStackTrace();
@@ -57,41 +30,27 @@ public class ParameterServiceBean implements ParameterService {
 
 
     @Override
-    public Parametre getParameterByCode(String code) {
-        Parametre parametre = null;
+    public Parameter getParameterByCode(String code) {
+        Parameter parameter = null;
         try {
-            Query query = em.createQuery("SELECT p FROM Parametre p WHERE p.prmCode = :code and p.prmStatut = 1  ");
+            Query query = em.createQuery("SELECT p FROM Parameter p WHERE p.prmCode = :code and p.prmStatut = 1  ");
             query.setParameter("code", code);
-            parametre = (Parametre) query.getSingleResult();
+            parameter = (Parameter) query.getSingleResult();
         } catch (Exception e) {
             System.out.println("Pas de parametre de code " + code);
             e.printStackTrace();
         }
-        return parametre;
+        return parameter;
     }
 
     @Override
-    public int setValue(String code, String value) {
-
-        Query query = em.createQuery("SELECT p FROM Parametre p WHERE p.prmCode = :code and p.prmStatut = 1  ");
-        query.setParameter("code", code);
-        Parametre p = (Parametre) query.getSingleResult();
-
-
-        p.setPrmStringValue(value);
-        em.merge(p);
-
-        return 1;
-
+    public void saveParameter(Parameter parameter) {
+        em.merge(parameter);
     }
 
     @Override
-    public void saveParameter(Parametre parametre) {
-        em.merge(parametre);
-    }
-
-    @Override
-    public void createParameter(Parametre parametre) {
-        em.persist(parametre);
+    public List<Parameter> getAll() {
+        Query query = em.createQuery("SELECT p FROM Parameter p WHERE p.prmStatut = 1", Parameter.class);
+        return query.getResultList();
     }
 }
