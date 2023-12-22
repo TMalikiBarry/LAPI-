@@ -1,5 +1,5 @@
 package sn.intouch.gu.lonaciapi.ejb.bigquery.enums;
 
-public enum HeaderTimeEnum {
+public enum AggregationTimeEnum {
     DAY, WEEK, MONTH
 }

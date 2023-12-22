@@ -1,9 +1,8 @@
 package sn.intouch.gu.lonaciapi.ejb.utils;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
+
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
@@ -16,7 +15,8 @@ public class DateUtil {
     }
 
     public static LocalDateTime endOfDay() {
-        return LocalDateTime.now(DEFAULT_ZONE_ID).with(LocalTime.MAX);
+        // return LocalDateTime.now(DEFAULT_ZONE_ID).with(LocalTime.MAX);
+        return LocalDateTime.now(DEFAULT_ZONE_ID).with(LocalTime.MIN).plusDays(1);
     }
 
 
@@ -57,5 +57,19 @@ public class DateUtil {
 
     public static String toString(final LocalDateTime localDateTime) {
         return localDateTime.format(DateTimeFormatter.ISO_DATE_TIME);
+    }
+
+    public static Date getStartDateFromDateString(AggregationTimeEnum timeEnum) {;
+        if (timeEnum.equals(AggregationTimeEnum.DAY))
+            return Date.from(DateUtil.startOfDay().toInstant(ZoneOffset.UTC));
+        else if(timeEnum.equals(AggregationTimeEnum.WEEK))
+            return Date.from(DateUtil.startOfWeek().toInstant(ZoneOffset.UTC));
+        else if (timeEnum.equals(AggregationTimeEnum.MONTH))
+            return Date.from(DateUtil.startOfMonth().toInstant(ZoneOffset.UTC));
+        return null;
+    }
+
+    public static Date getEndOfDay() {
+        return Date.from(DateUtil.endOfDay().toInstant(ZoneOffset.UTC));
     }
 }

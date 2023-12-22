@@ -1,7 +1,6 @@
 package sn.intouch.gu.lonaciapi.ejb.utils;
 
 import java.text.NumberFormat;
-import java.util.Locale;
 
 public class Utils {
     public static String formatLabelAmount(Double amount) {
