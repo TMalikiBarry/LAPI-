@@ -21,8 +21,10 @@ public class BigQueryConnection {
     }
 
     private static final String BIGQUERY_CONF_FILE_PATH = "BIGQUERY_CONF_FILE_PATH";
+    private static final String LONACI_TABLE_REF = "LONACI_TABLE_REF";
 
     private BigQuery bigQuery = null;
+    private String lonaciTableRef = null;
 
     public BigQuery getConnection() {
         if (bigQuery == null) {
@@ -43,7 +45,17 @@ public class BigQueryConnection {
                     .setCredentials(credentials)
                     .setProjectId(credentials.getProjectId())
                     .build().getService();
+
+            Parameter tableParam = parameterService.getParameterByCode(LONACI_TABLE_REF);
+            if (tableParam == null)
+                throw new RuntimeException("Cannot find parameter of code :: " + LONACI_TABLE_REF);
+            lonaciTableRef = tableParam.getPrmStringValue();
         }
         return bigQuery;
+    }
+
+    public String getLonaciTableRef() {
+        this.getConnection();
+        return lonaciTableRef;
     }
 }

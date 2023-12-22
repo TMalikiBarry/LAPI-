@@ -12,15 +12,12 @@ import java.util.*;
 @Stateless
 public class BigQueryServiceBean implements BigQueryService{
 
-    private static final String TABLE_REF = "hubsoinfra.LONACI.lonaci_trx";
-
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-
     @Override
     public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type) {
+        BigQueryConnection connection = new BigQueryConnection();
         try {
-
-            String query = "SELECT "+ this.getGrouper(time, "date") +" ddate, COUNT(*) as number, SUM(trx.montant) as sum FROM "+ TABLE_REF +" trx "
+            String query = "SELECT "+ this.getGrouper(time, "date") +" ddate, COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
@@ -36,7 +33,7 @@ public class BigQueryServiceBean implements BigQueryService{
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
 
-            BigQuery bigquery = new BigQueryConnection().getConnection();
+            BigQuery bigquery = connection.getConnection();
             TableResult result = bigquery.query(queryConfig.build());
 
             List<Map<String, String>> responses = new ArrayList<>();
@@ -61,7 +58,6 @@ public class BigQueryServiceBean implements BigQueryService{
 
     private String getGrouper(AggregationTimeEnum time, String column) {
         if (time.equals(AggregationTimeEnum.DAY))
-            //return "HOUR(" + column + ")";
             return "EXTRACT(HOUR FROM " + column + ")";
         if (time.equals(AggregationTimeEnum.WEEK))
             return "DATE(" + column + ")";
@@ -72,8 +68,8 @@ public class BigQueryServiceBean implements BigQueryService{
 
     public Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operator, String type) {
         try {
-
-            String query = "SELECT COUNT(*) as number, SUM(trx.montant) as sum FROM "+ TABLE_REF +" trx "
+            BigQueryConnection connection = new BigQueryConnection();
+            String query = "SELECT COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
@@ -89,7 +85,7 @@ public class BigQueryServiceBean implements BigQueryService{
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
 
-            BigQuery bigquery = new BigQueryConnection().getConnection();
+            BigQuery bigquery = connection.getConnection();
             TableResult result = bigquery.query(queryConfig.build());
 
             Schema schema = result.getSchema();
