@@ -56,16 +56,7 @@ public class BigQueryServiceBean implements BigQueryService{
         return new ArrayList<>();
     }
 
-    private String getGrouper(AggregationTimeEnum time, String column) {
-        if (time.equals(AggregationTimeEnum.DAY))
-            return "EXTRACT(HOUR FROM " + column + ")";
-        if (time.equals(AggregationTimeEnum.WEEK))
-            return "DATE(" + column + ")";
-        if (time.equals(AggregationTimeEnum.MONTH))
-            return "DATE(" + column + ")";
-        else return "";
-    }
-
+    @Override
     public Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operator, String type) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
@@ -105,4 +96,57 @@ public class BigQueryServiceBean implements BigQueryService{
         }
         return new HashMap<>();
     }
+
+    @Override
+    public List<Map<String, String>> getSumClientsBetweenDates(Date startDate, Date endDate, String operator, String type) {
+        try {
+            BigQueryConnection connection = new BigQueryConnection();
+            String query = "SELECT trx.destinataire as client, SUM(trx.montant) as sum, COUNT(*) as number FROM "+ connection.getLonaciTableRef() +" trx "
+                    + " WHERE trx.date BETWEEN @startDate AND @endDate ";
+            if (operator != null)
+                query += " AND operateur_id = @operator";
+            if (type != null)
+                query += " AND type_transaction = @type";
+            query += " GROUP BY client;";
+            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
+                    .addNamedParameter("startDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(startDate)))
+                    .addNamedParameter("endDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(endDate)));
+
+            if (operator != null)
+                queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (type != null)
+                queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
+
+            BigQuery bigquery = connection.getConnection();
+            TableResult result = bigquery.query(queryConfig.build());
+
+            List<Map<String, String>> responses = new ArrayList<>();
+            Schema schema = result.getSchema();
+            for (FieldValueList row : result.iterateAll()) {
+                Map<String, String> m = new HashMap<>();
+                for (Field field : schema.getFields()) {
+                    if(field.getName().equals("sum"))
+                        m.put(field.getName(), Utils.formatLabelAmount(Double.valueOf(row.get(field.getName()).getStringValue())));
+                    else
+                        m.put(field.getName(), row.get(field.getName()).getStringValue());
+                }
+                responses.add(m);
+            }
+            return responses;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    private String getGrouper(AggregationTimeEnum time, String column) {
+        if (time.equals(AggregationTimeEnum.DAY))
+            return "EXTRACT(HOUR FROM " + column + ")";
+        if (time.equals(AggregationTimeEnum.WEEK))
+            return "DATE(" + column + ")";
+        if (time.equals(AggregationTimeEnum.MONTH))
+            return "DATE(" + column + ")";
+        else return "";
+    }
+
 }

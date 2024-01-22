@@ -72,4 +72,5 @@ public class DateUtil {
     public static Date getEndOfDay() {
         return Date.from(DateUtil.endOfDay().toInstant(ZoneOffset.UTC));
     }
+
 }

@@ -13,12 +13,14 @@ import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
 import sn.intouch.gu.lonaciapi.ws.dto.HeaderResponse;
+import sn.intouch.gu.lonaciapi.ws.dto.SubHeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.TrendResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 @RestController
 public class AggregationReportingRestService {
@@ -64,8 +66,48 @@ public class AggregationReportingRestService {
                         .build()
                 ));
     }
+
+    @RequestMapping(value = {"/api/v1/aggregation/sub-header"}, method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<APIResponse<SubHeaderResponse>> subHeader(
+            @RequestParam(value = "start_date") String start_date,
+            @RequestParam(value = "end_date") String end_date,
+            @RequestParam(value = "operator", required = false) String operator,
+            @RequestParam(value = "type", required = false) String type
+    ) throws RuntimeException {
+        Date startDate;
+        Date endDate;
+        try {
+            startDate = new Date(Long.parseLong(start_date));
+            endDate = new Date(Long.parseLong(end_date));
+            if (endDate.before(startDate))
+                throw new RuntimeException("Bad date format");
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        List<Map<String, String>> sumsClients = bigQueryService.getSumClientsBetweenDates(startDate, endDate, operator, type);
+        Integer activeClients = sumsClients.size();
+        AtomicReference<Integer> operationsNumber = new AtomicReference<>(0);
+        AtomicReference<Double> overallVolume = new AtomicReference<>(0D);
+        if (!sumsClients.isEmpty()) {
+            sumsClients.forEach(map -> {
+                operationsNumber.updateAndGet(v -> v + Integer.parseInt(map.get("number")));
+                overallVolume.updateAndGet(v -> v + Integer.parseInt(map.get("sum")));
+            });
+        }
+        Double averageCart = overallVolume.get() / activeClients;
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
+                SubHeaderResponse.builder()
+                        .activeClients(sumsClients.size())
+                        .averageCart(averageCart)
+                        .operationsNumber(operationsNumber.get())
+                        .overallVolume(overallVolume.get())
+                        .build()
+                ));
+    }
     @RequestMapping(value = {"/api/v1/aggregation/trend"}, method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<APIResponse<TrendResponse>> subheader(
+    public ResponseEntity<APIResponse<TrendResponse>> trend(
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type
     ) throws RuntimeException {
