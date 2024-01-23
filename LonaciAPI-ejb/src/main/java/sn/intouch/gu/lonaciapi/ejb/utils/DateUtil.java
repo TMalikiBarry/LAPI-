@@ -10,6 +10,10 @@ import java.util.Date;
 public class DateUtil {
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.of("UTC");
 
+    public static final long DAY_INTERVAL_IN_MILLIS = 1000 * 3600 * 24;
+    public static final long MONTH_INTERVAL_IN_MILLIS = DAY_INTERVAL_IN_MILLIS * 30;
+    public static final long YEAR_INTERVAL_IN_MILLIS = MONTH_INTERVAL_IN_MILLIS * 12;
+
     public static LocalDateTime startOfDay() {
         return LocalDateTime.now(DEFAULT_ZONE_ID).with(LocalTime.MIN);
     }

@@ -9,7 +9,7 @@ import java.util.Map;
 
 @Local
 public interface BigQueryService {
-    List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type);
+    List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper);
 
     Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operatorId, String type);
 

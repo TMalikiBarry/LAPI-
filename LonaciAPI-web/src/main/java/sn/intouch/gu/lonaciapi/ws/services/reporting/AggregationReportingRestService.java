@@ -1,6 +1,5 @@
 package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,10 +21,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+
 @RestController
 public class AggregationReportingRestService {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
-
 
     @RequestMapping(value = {"/api/v1/aggregation/curve"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<List<Map<String, String>>>> curve(
@@ -48,10 +47,11 @@ public class AggregationReportingRestService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH , operator, type);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH, operator, type, false);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
+
     @RequestMapping(value = {"/api/v1/aggregation/header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<HeaderResponse>> header(
             @RequestParam(value = "operator", required = false) String operator,
@@ -64,7 +64,7 @@ public class AggregationReportingRestService {
                         .week(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), operator, type))
                         .month(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), operator, type))
                         .build()
-                ));
+        ));
     }
 
     @RequestMapping(value = {"/api/v1/aggregation/sub-header"}, method = RequestMethod.GET, produces = "application/json")
@@ -104,8 +104,9 @@ public class AggregationReportingRestService {
                         .operationsNumber(operationsNumber.get())
                         .overallVolume(overallVolume.get())
                         .build()
-                ));
+        ));
     }
+
     @RequestMapping(value = {"/api/v1/aggregation/trend"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<TrendResponse>> trend(
             @RequestParam(value = "operator", required = false) String operator,
@@ -114,11 +115,56 @@ public class AggregationReportingRestService {
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 TrendResponse.builder()
-                        .day(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), AggregationTimeEnum.DAY , operator, type))
-                        .week(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), AggregationTimeEnum.WEEK , operator, type))
-                        .month(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), AggregationTimeEnum.MONTH , operator, type))
+                        .day(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), AggregationTimeEnum.DAY, operator, type, false))
+                        .week(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), AggregationTimeEnum.WEEK, operator, type, false))
+                        .month(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), AggregationTimeEnum.MONTH, operator, type, false))
                         .build()
-                ));
+        ));
+    }
+
+    /**
+     * REPORT ENDPOINT
+     *
+     * @param start_date
+     * @param end_date
+     * @param operator
+     * @param type
+     * @return
+     * @throws RuntimeException
+     */
+    @RequestMapping(value = {"/api/v1/aggregation/report"}, method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<APIResponse<List<Map<String, String>>>> report(
+            @RequestParam(value = "start_date") String start_date,
+            @RequestParam(value = "end_date") String end_date,
+            @RequestParam(value = "operator", required = false) String operator,
+            @RequestParam(value = "type", required = false) String type
+    ) throws RuntimeException {
+        Date startDate;
+        Date endDate;
+        try {
+            startDate = new Date(Long.parseLong(start_date));
+            endDate = new Date(Long.parseLong(end_date));
+            if (endDate.before(startDate))
+                throw new RuntimeException("Bad date format");
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        long dateDiff = endDate.getTime() - startDate.getTime();
+
+        AggregationTimeEnum timeEnum;
+
+        if (dateDiff <= DateUtil.DAY_INTERVAL_IN_MILLIS)
+            timeEnum = AggregationTimeEnum.DAY;
+        else if (dateDiff <= DateUtil.MONTH_INTERVAL_IN_MILLIS)
+            timeEnum = AggregationTimeEnum.MONTH;
+        else
+            timeEnum = AggregationTimeEnum.YEAR;
+
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, timeEnum, operator, type, true);
+
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
 
 }

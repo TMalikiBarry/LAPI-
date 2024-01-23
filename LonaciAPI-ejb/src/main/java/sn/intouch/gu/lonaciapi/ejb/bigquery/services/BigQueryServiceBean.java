@@ -13,11 +13,15 @@ import java.util.*;
 public class BigQueryServiceBean implements BigQueryService{
 
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT_WITH_HOUR = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+
     @Override
-    public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type) {
+    public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper) {
         BigQueryConnection connection = new BigQueryConnection();
+        System.out.println("START DATE :: " + startDate + " END DATE :: " + endDate);
         try {
-            String query = "SELECT "+ this.getGrouper(time, "date") +" ddate, COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
+            String grouper = formatDateGrouper ? this.getFormattedGrouper(time, "date") : getGrouper(time, "date");
+            String query = "SELECT " + grouper + " ddate, COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
@@ -25,9 +29,14 @@ public class BigQueryServiceBean implements BigQueryService{
                 query += " AND type_transaction = @type";
             query += " GROUP BY ddate ORDER BY ddate ASC;";
 
-            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
-                    .addNamedParameter("startDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(startDate)))
-                    .addNamedParameter("endDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(endDate)));
+            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query);
+            if (formatDateGrouper) {
+                queryConfig.addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
+                        .addNamedParameter("endDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(endDate)));
+            } else {
+                queryConfig.addNamedParameter("startDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(startDate)))
+                        .addNamedParameter("endDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(endDate)));
+            }
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
             if (type != null)
@@ -146,6 +155,18 @@ public class BigQueryServiceBean implements BigQueryService{
             return "DATE(" + column + ")";
         if (time.equals(AggregationTimeEnum.MONTH))
             return "DATE(" + column + ")";
+        else return "";
+    }
+
+    private String getFormattedGrouper(AggregationTimeEnum time, String column) {
+        if (time.equals(AggregationTimeEnum.DAY))
+            return "FORMAT_DATETIME('%Y/%m/%d %H:00:00', CAST(" + column + " AS DATETIME))";
+        if (time.equals(AggregationTimeEnum.WEEK))
+            return "FORMAT_DATETIME('%Y/%m/%d', CAST(" + column + " AS DATETIME))";
+        if (time.equals(AggregationTimeEnum.MONTH))
+            return "FORMAT_DATETIME('%Y/%m/%d', CAST(" + column + " AS DATETIME))";
+        if (time.equals(AggregationTimeEnum.YEAR))
+            return "FORMAT_DATETIME('%Y/%m', CAST(" + column + " AS DATETIME))";
         else return "";
     }
 
