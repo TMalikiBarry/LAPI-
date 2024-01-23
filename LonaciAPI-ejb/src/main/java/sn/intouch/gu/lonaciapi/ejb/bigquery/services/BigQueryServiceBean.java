@@ -105,6 +105,82 @@ public class BigQueryServiceBean implements BigQueryService{
         }
         return new HashMap<>();
     }
+    @Override
+    public Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type) {
+        try {
+            BigQueryConnection connection = new BigQueryConnection();
+            String query = "SELECT COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
+                    + " WHERE trx.date BETWEEN @startDate AND @endDate ";
+            if (operator != null)
+                query += " AND operateur_id = @operator";
+            if (type != null)
+                query += " AND type_transaction = @type";
+
+            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
+                    .addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
+                    .addNamedParameter("endDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(endDate)));
+
+            if (operator != null)
+                queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (type != null)
+                queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
+
+            BigQuery bigquery = connection.getConnection();
+            TableResult result = bigquery.query(queryConfig.build());
+
+            Schema schema = result.getSchema();
+            Map<String, String> m = new HashMap<>();
+            for (FieldValueList row : result.iterateAll()) {
+                for (Field field : schema.getFields()) {
+                    if(field.getName().equals("sum"))
+                        m.put(field.getName(), row.get(field.getName()).getStringValue());
+                    else
+                        m.put(field.getName(), row.get(field.getName()).getStringValue());
+                }
+                break;
+            }
+            return m;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new HashMap<>();
+    }
+
+    @Override
+    public Integer getActiveClients(Date startDate, Date endDate, String operator, String type) {
+        try {
+            BigQueryConnection connection = new BigQueryConnection();
+            String query = "SELECT COUNT(DISTINCT destinataire) as number FROM "+ connection.getLonaciTableRef() +" trx "
+                    + " WHERE trx.date BETWEEN @startDate AND @endDate ";
+            if (operator != null)
+                query += " AND operateur_id = @operator";
+            if (type != null)
+                query += " AND type_transaction = @type";
+
+            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
+                    .addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
+                    .addNamedParameter("endDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(endDate)));
+
+            if (operator != null)
+                queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (type != null)
+                queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
+
+            BigQuery bigquery = connection.getConnection();
+            TableResult result = bigquery.query(queryConfig.build());
+
+            Schema schema = result.getSchema();
+            for (FieldValueList row : result.iterateAll()) {
+                for (Field field : schema.getFields()) {
+                        return Integer.valueOf(row.get(field.getName()).getStringValue());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
 
     @Override
     public List<Map<String, String>> getSumClientsBetweenDates(Date startDate, Date endDate, String operator, String type) {

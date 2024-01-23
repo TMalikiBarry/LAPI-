@@ -11,7 +11,12 @@ import java.util.Map;
 public interface BigQueryService {
     List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper);
 
+    @Deprecated
     Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operatorId, String type);
+
+    Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type);
+
+    Integer getActiveClients(Date startDate, Date endDate, String operator, String type);
 
     List<Map<String, String>> getSumClientsBetweenDates(Date startDate, Date endDate, String operator, String type);
 }

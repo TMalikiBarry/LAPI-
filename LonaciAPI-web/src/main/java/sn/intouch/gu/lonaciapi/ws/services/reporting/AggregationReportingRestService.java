@@ -86,23 +86,18 @@ public class AggregationReportingRestService {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        List<Map<String, String>> sumsClients = bigQueryService.getSumClientsBetweenDates(startDate, endDate, operator, type);
-        Integer activeClients = sumsClients.size();
-        AtomicReference<Integer> operationsNumber = new AtomicReference<>(0);
-        AtomicReference<Double> overallVolume = new AtomicReference<>(0D);
-        if (!sumsClients.isEmpty()) {
-            sumsClients.forEach(map -> {
-                operationsNumber.updateAndGet(v -> v + Integer.parseInt(map.get("number")));
-                overallVolume.updateAndGet(v -> v + Integer.parseInt(map.get("sum")));
-            });
-        }
-        Double averageCart = overallVolume.get() / activeClients;
+        Map<String, String> sumBetweenDates = bigQueryService.getSumBetweenDatesV2(startDate, endDate, operator, type);
+        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, type);
+        Long operationsNumber = Long.valueOf(sumBetweenDates.get("number"));
+        Double overallVolume = Double.valueOf(sumBetweenDates.get("sum"));
+
+        Double averageCart = overallVolume / operationsNumber;
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 SubHeaderResponse.builder()
-                        .activeClients(sumsClients.size())
+                        .activeClients(activeClients)
                         .averageCart(averageCart)
-                        .operationsNumber(operationsNumber.get())
-                        .overallVolume(overallVolume.get())
+                        .operationsNumber(operationsNumber)
+                        .overallVolume(overallVolume)
                         .build()
         ));
     }
