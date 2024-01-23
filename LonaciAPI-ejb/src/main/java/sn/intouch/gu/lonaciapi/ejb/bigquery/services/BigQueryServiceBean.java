@@ -33,9 +33,6 @@ public class BigQueryServiceBean implements BigQueryService{
             if (formatDateGrouper) {
                 queryConfig.addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
                         .addNamedParameter("endDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(endDate)));
-            } else {
-                queryConfig.addNamedParameter("startDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(startDate)))
-                        .addNamedParameter("endDate", QueryParameterValue.date(SIMPLE_DATE_FORMAT.format(endDate)));
             }
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));

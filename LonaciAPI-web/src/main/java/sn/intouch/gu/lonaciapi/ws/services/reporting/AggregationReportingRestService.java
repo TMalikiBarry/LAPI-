@@ -47,7 +47,7 @@ public class AggregationReportingRestService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH, operator, type, false);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH, operator, type, true);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
