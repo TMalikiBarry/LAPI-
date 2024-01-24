@@ -233,13 +233,13 @@ public class BigQueryServiceBean implements BigQueryService{
 
     private String getFormattedGrouper(AggregationTimeEnum time, String column) {
         if (time.equals(AggregationTimeEnum.DAY))
-            return "FORMAT_DATETIME('%Y/%m/%d %H:00:00', CAST(" + column + " AS DATETIME))";
+            return "FORMAT_DATETIME('%Y-%m-%d %H:00:00', CAST(" + column + " AS DATETIME))";
         if (time.equals(AggregationTimeEnum.WEEK))
-            return "FORMAT_DATETIME('%Y/%m/%d', CAST(" + column + " AS DATETIME))";
+            return "FORMAT_DATETIME('%Y-%m-%d', CAST(" + column + " AS DATETIME))";
         if (time.equals(AggregationTimeEnum.MONTH))
-            return "FORMAT_DATETIME('%Y/%m/%d', CAST(" + column + " AS DATETIME))";
+            return "FORMAT_DATETIME('%Y-%m-%d', CAST(" + column + " AS DATETIME))";
         if (time.equals(AggregationTimeEnum.YEAR))
-            return "FORMAT_DATETIME('%Y/%m', CAST(" + column + " AS DATETIME))";
+            return "FORMAT_DATETIME('%Y-%m', CAST(" + column + " AS DATETIME))";
         else return "";
     }
 
