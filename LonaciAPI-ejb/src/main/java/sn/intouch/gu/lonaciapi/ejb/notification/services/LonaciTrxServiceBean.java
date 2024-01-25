@@ -17,23 +17,12 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	@PersistenceContext(unitName = "lonaciPU")
 	EntityManager em;
 
-	/*private LonaciTrxRepository lonaciTrxRepository;
-
-	@PostConstruct
-	private void init() {
-		RepositoryFactorySupport factorySupport = new JpaRepositoryFactory(em);
-		this.lonaciTrxRepository = factorySupport.getRepository(LonaciTrxRepository.class);
-	}*/
-
-	// private static Logger log = Logger.getLogger(LonaciTrxServiceBean.class);
-
 	public LonaciTrx getTransactionById(Long id) {
 		LonaciTrx transaction = em.find(LonaciTrx.class, id);
 		if(transaction==null)
 			throw new RuntimeException("No transaction found for this ID");
 		return transaction;
 	}
-
 
 	@Override
 	public LonaciTrx saveTransaction(LonaciTrx transaction) {
@@ -83,20 +72,9 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			em.merge(transaction);
 			return true;
 		} catch (Exception e) {
-			// log.error("An error occurred while saving the transaction", e);
 			throw e;
 		}
 	}
-
-	/*@Override
-	public Page<LonaciTrx> findByDateBetweenAndOperateurIDAndTypeTransaction(Date startDate, Date endDate, String operatorId, String type, Pageable pageable) {
-		return lonaciTrxRepository.findByDateBetweenAndOperateurIDAndTypeTransaction(startDate, endDate, operatorId, type, pageable);
-	}
-
-	@Override
-	public Page<LonaciTrx> findByExample(Example<LonaciTrx> example, Pageable pageable) {
-		return lonaciTrxRepository.findAll(example, pageable);
-	}*/
 
 	@Override
 	public PaginationResponse<List<LonaciTrx>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(Date startDate, Date endDate, String operatorId, String typeTransaction, String sortBy, String sortDir, int pageSize, int page) {
@@ -128,10 +106,11 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			query.setParameter("typeTransaction", typeTransaction);
 			aggQuery.setParameter("typeTransaction", typeTransaction);
 		}
-
 		List<Object[]> aggResult = aggQuery.getResultList();
-		query.setFirstResult(page * pageSize);
-		query.setMaxResults(pageSize);
+		if (page != -1) {
+			query.setFirstResult(page * pageSize);
+			query.setMaxResults(pageSize);
+		}
 		long totalsize = Long.parseLong((aggResult.get(0)[0]).toString());
 		Double sum = (aggResult.get(0)[1]) != null ? Double.parseDouble((aggResult.get(0)[1]).toString()) : 0;
 
