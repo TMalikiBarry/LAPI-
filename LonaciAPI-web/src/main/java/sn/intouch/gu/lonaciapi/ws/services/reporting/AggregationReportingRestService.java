@@ -1,5 +1,6 @@
 package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +11,7 @@ import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
 import sn.intouch.gu.lonaciapi.ws.dto.HeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.SubHeaderResponse;
@@ -19,12 +21,12 @@ import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
 
 @RestController
+@Log4j2
 public class AggregationReportingRestService {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
+    private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
 
     @RequestMapping(value = {"/api/v1/aggregation/curve"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<List<Map<String, String>>>> curve(
@@ -161,5 +163,4 @@ public class AggregationReportingRestService {
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
-
 }

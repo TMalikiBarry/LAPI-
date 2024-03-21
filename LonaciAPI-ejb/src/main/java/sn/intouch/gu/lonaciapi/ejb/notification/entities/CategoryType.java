@@ -4,28 +4,27 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import sn.intouch.gu.lonaciapi.ejb.dto.TypeTrxDTO;
+import sn.intouch.gu.lonaciapi.ejb.dto.CategoryTypeDTO;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.*;
 
 
 @Entity
-@Table(name="type_trx")
+@Table(name="category_type")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TypeTrx implements Serializable{
+public class CategoryType implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@Column(name="type_id")
+	@Column(name="id")
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	private Long typeId;
+	private Long id;
 	
 	@Column(name="code")
 	private String code;
@@ -39,19 +38,8 @@ public class TypeTrx implements Serializable{
 
 	@Column(name = "creation_date")
 	private Date creationDate;
-
 	@Column(name = "modification_date")
 	private Date modificationDate;
-
-	@Column(name = "category")
-	private String category;
-
-	@Column(name = "direction")
-	@Enumerated(EnumType.STRING)
-	private TypeDirection direction;
-
-	@Column(name = "use_to_compute")
-	private Boolean useToCompute = false;
 
 	@PreUpdate
 	private void updatedDate() {
@@ -62,13 +50,10 @@ public class TypeTrx implements Serializable{
 		this.creationDate = new Date();
 		this.modificationDate = new Date();
 	}
-	public TypeTrxDTO toDTO() {
-		return TypeTrxDTO.builder()
+	public CategoryTypeDTO toDTO() {
+		return CategoryTypeDTO.builder()
 				.code(code)
 				.label(label)
-				.useToCompute(useToCompute)
-				.direction(direction)
-				.category(category)
 				.build();
 	}
 }

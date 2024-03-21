@@ -2,6 +2,7 @@ package sn.intouch.gu.lonaciapi.ejb.utils;
 
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 
+import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
@@ -9,6 +10,10 @@ import java.util.Date;
 
 public class DateUtil {
     private static final ZoneId DEFAULT_ZONE_ID = ZoneId.of("UTC");
+
+    public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    public static final SimpleDateFormat SIMPLE_DATE_FORMAT_WITH_HOUR = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+
 
     public static final long DAY_INTERVAL_IN_MILLIS = 1000 * 3600 * 24;
     public static final long MONTH_INTERVAL_IN_MILLIS = DAY_INTERVAL_IN_MILLIS * 30;

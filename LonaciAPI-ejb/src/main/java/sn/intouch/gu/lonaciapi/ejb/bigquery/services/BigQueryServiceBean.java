@@ -1,19 +1,20 @@
 package sn.intouch.gu.lonaciapi.ejb.bigquery.services;
 
 import com.google.cloud.bigquery.*;
+import lombok.extern.log4j.Log4j2;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.BigQueryConnection;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.utils.Utils;
 
 import javax.ejb.Stateless;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-@Stateless
-public class BigQueryServiceBean implements BigQueryService{
+import static sn.intouch.gu.lonaciapi.ejb.utils.DateUtil.SIMPLE_DATE_FORMAT;
+import static sn.intouch.gu.lonaciapi.ejb.utils.DateUtil.SIMPLE_DATE_FORMAT_WITH_HOUR;
 
-    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat SIMPLE_DATE_FORMAT_WITH_HOUR = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+@Stateless
+@Log4j2
+public class BigQueryServiceBean implements BigQueryService{
 
     @Override
     public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper) {
@@ -219,6 +220,61 @@ public class BigQueryServiceBean implements BigQueryService{
             e.printStackTrace();
         }
         return new ArrayList<>();
+    }
+
+
+    @Override
+    public Map<String, String> getSumBetweenDatesWithCategoryAndUseToCompute(Date startDate, Date endDate, String operator, String category, Boolean useToCompute){
+        try {
+            BigQueryConnection connection = new BigQueryConnection();
+            String query = "SELECT COUNT(*) as number, SUM( CASE WHEN type.direction = 'CREDIT' then trx.montant ELSE - trx.montant END ) as sum FROM "+ connection.getLonaciTableRef() +" trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code "
+                    + " WHERE trx.date BETWEEN @startDate AND @endDate ";
+            if (operator != null)
+                query += " AND operateur_id = @operator";
+            if (category != null)
+                query += " AND type.category = @category";
+            if (useToCompute != null)
+                query += " AND type.use_to_compute = @useToCompute";
+
+            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
+                    .addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
+                    .addNamedParameter("endDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(endDate)));
+
+            if (operator != null)
+                queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (category != null)
+                queryConfig.addNamedParameter("category", QueryParameterValue.string(category));
+            if (useToCompute != null)
+                queryConfig.addNamedParameter("useToCompute", QueryParameterValue.int64((Boolean.TRUE.equals(useToCompute) ? 1 : 0)));
+
+            BigQuery bigquery = connection.getConnection();
+            TableResult result = bigquery.query(queryConfig.build());
+
+            Schema schema = result.getSchema();
+            Map<String, String> m = new HashMap<>();
+            for (FieldValueList row : result.iterateAll()) {
+                for (Field field : schema.getFields()) {
+                    String value = this.getStringValue(field.getName(), row.get(field.getName()));
+                    m.put(field.getName(), value);
+                }
+                break;
+            }
+            return m;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new HashMap<>();
+    }
+
+    private String getStringValue(String name, FieldValue fieldValue) {
+        try {
+            return fieldValue.getStringValue();
+        } catch (Exception e) {
+            if("sum".equals(name) || "number".equals(name)) {
+                return "0";
+            }
+        }
+        return "";
     }
 
     private String getGrouper(AggregationTimeEnum time, String column) {

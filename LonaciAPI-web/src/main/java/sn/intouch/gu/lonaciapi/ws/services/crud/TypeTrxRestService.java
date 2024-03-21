@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.dto.TypeTrxDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.CategoryType;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.TypeTrx;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.CategoryTypeService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.TypeTrxService;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
@@ -15,8 +17,9 @@ import java.util.List;
 
 @RestController
 public class TypeTrxRestService {
-    private final TypeTrxService typeTrxService = (TypeTrxService) JNDIUtils
-            .lookUpEJB(EJBRegistry.TypeTrxServiceBean);
+    private final TypeTrxService typeTrxService = (TypeTrxService) JNDIUtils.lookUpEJB(EJBRegistry.TypeTrxServiceBean);
+    private final CategoryTypeService categoryTypeService = (CategoryTypeService) JNDIUtils
+            .lookUpEJB(EJBRegistry.CategoryTypeServiceBean);
 
     @RequestMapping(value = "/api/v1/typeTrx/{id}", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getTypeTrx(@PathVariable String id) {
@@ -61,6 +64,15 @@ public class TypeTrxRestService {
                     .reason("CREATED")
                     .build(), HttpStatus.CREATED);
         }
+
+        CategoryType category = categoryTypeService.getByCode(dto.getCategory());
+        if (category == null) {
+            return new ResponseEntity<>(APIResponse.<TypeTrxDTO>builder()
+                    .code(404)
+                    .reason("Cannot find category of code :: " + dto.getCategory())
+                    .build(), HttpStatus.NOT_FOUND);
+        }
+
         typeTrx = dto.fromDTO();
         typeTrx = typeTrxService.save(typeTrx);
         return ResponseEntity.ok(APIResponse.<TypeTrxDTO>builder()
@@ -80,6 +92,13 @@ public class TypeTrxRestService {
                     .build(), HttpStatus.NOT_FOUND);
 
         transposeUpdate(typeTrx, dto);
+        CategoryType category = categoryTypeService.getByCode(typeTrx.getCategory());
+        if (category == null) {
+            return new ResponseEntity<>(APIResponse.<TypeTrxDTO>builder()
+                    .code(404)
+                    .reason("Cannot find category of code :: " + dto.getCategory())
+                    .build(), HttpStatus.NOT_FOUND);
+        }
         typeTrx = typeTrxService.save(typeTrx);
         return ResponseEntity.ok(APIResponse.<TypeTrxDTO>builder()
                         .code(200)
@@ -107,5 +126,8 @@ public class TypeTrxRestService {
     private void transposeUpdate(TypeTrx typeTrx, TypeTrxDTO dto) {
         if (dto.getCode() != null) typeTrx.setCode(dto.getCode());
         if (dto.getLabel() != null) typeTrx.setLabel(dto.getLabel());
+        if (dto.getCategory() != null) typeTrx.setCategory(dto.getCategory());
+        if (dto.getDirection() != null) typeTrx.setDirection(dto.getDirection());
+        if (dto.getUseToCompute() != null) typeTrx.setUseToCompute(dto.getUseToCompute());
     }
 }

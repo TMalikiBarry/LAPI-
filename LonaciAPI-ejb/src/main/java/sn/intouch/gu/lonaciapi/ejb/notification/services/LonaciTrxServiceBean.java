@@ -7,7 +7,6 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.List;
 
@@ -30,7 +29,6 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			return em.merge(transaction);
 		} catch (Exception e) {
 			e.printStackTrace();
-			// log.error(String.format("The transaction of ID %s is already saved", transaction.getLonaciTransactionID()) , e);
 		}
 		return null;
 	}
@@ -44,7 +42,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			List<LonaciTrx> lonaciTrxs = (List<LonaciTrx>) query.getResultList();
 			if (lonaciTrxs != null && !lonaciTrxs.isEmpty()) return lonaciTrxs.get(0);
 		} catch (Exception e) {
-			// log.error("An error occurred while retrieving notification ", e);
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -60,7 +58,6 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			List<LonaciTrx> lonaciTrxs = (List<LonaciTrx>) query.getResultList();
 			if (lonaciTrxs != null && !lonaciTrxs.isEmpty()) return lonaciTrxs.get(0);
 		} catch (Exception e) {
-			// log.error("An error occurred while retrieving notification ", e);
 			throw e;
 		}
 		return null;

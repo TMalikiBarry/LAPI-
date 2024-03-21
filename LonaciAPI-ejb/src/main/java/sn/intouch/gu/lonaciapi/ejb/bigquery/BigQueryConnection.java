@@ -22,9 +22,11 @@ public class BigQueryConnection {
 
     private static final String BIGQUERY_CONF_FILE_PATH = "BIGQUERY_CONF_FILE_PATH";
     private static final String LONACI_TABLE_REF = "LONACI_TABLE_REF";
+    private static final String LONACI_TYPE_TABLE_REF = "LONACI_TYPE_TABLE_REF";
 
     private BigQuery bigQuery = null;
     private String lonaciTableRef = null;
+    private String lonaciTypeTableRef = null;
 
     public BigQuery getConnection() {
         if (bigQuery == null) {
@@ -47,9 +49,11 @@ public class BigQueryConnection {
                     .build().getService();
 
             Parameter tableParam = parameterService.getParameterByCode(LONACI_TABLE_REF);
-            if (tableParam == null)
-                throw new RuntimeException("Cannot find parameter of code :: " + LONACI_TABLE_REF);
+            Parameter typeTableParam = parameterService.getParameterByCode(LONACI_TYPE_TABLE_REF);
+            if (tableParam == null || typeTableParam == null)
+                throw new RuntimeException("Cannot find parameters of code :: " + LONACI_TABLE_REF + " OR " + LONACI_TYPE_TABLE_REF);
             lonaciTableRef = tableParam.getPrmStringValue();
+            lonaciTypeTableRef = typeTableParam.getPrmStringValue();
         }
         return bigQuery;
     }
@@ -57,5 +61,10 @@ public class BigQueryConnection {
     public String getLonaciTableRef() {
         this.getConnection();
         return lonaciTableRef;
+    }
+
+    public String getLonaciTypeTableRef() {
+        this.getConnection();
+        return lonaciTypeTableRef;
     }
 }
