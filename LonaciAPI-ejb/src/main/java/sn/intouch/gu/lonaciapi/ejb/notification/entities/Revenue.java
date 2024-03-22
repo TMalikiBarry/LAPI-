@@ -5,14 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sn.intouch.gu.lonaciapi.ejb.dto.RevenueDTO;
+import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 @Entity
-@Table(name = "revenue")
+@Table(name = "revenue", uniqueConstraints = { @UniqueConstraint(columnNames = { "date", "operator" }) })
 @AllArgsConstructor
 @Data
 @Builder
@@ -30,15 +33,18 @@ public class Revenue implements Serializable {
 	private Double integratorRemuneration;
 	private Double revenue;
 	private Double royalties;
-	
-	@PrePersist
-	private void createdDate() {
-		this.date = new Date();
+
+	public Revenue(Date date, Double grossGamingProduct, Double integratorRemuneration, Double revenue, Double royalties) {
+		this.date = date;
+		this.grossGamingProduct = grossGamingProduct;
+		this.integratorRemuneration = integratorRemuneration;
+		this.revenue = revenue;
+		this.royalties = royalties;
 	}
 
 	public RevenueDTO toDTO() {
 		return RevenueDTO.builder()
-				.date(date != null ? date.getTime() : 0)
+				.date(date != null ? DateUtil.SIMPLE_DATE_FORMAT.format(date) : null)
 				.operator(operator)
 				.grossGamingProduct(grossGamingProduct)
 				.integratorRemuneration(integratorRemuneration)
@@ -46,4 +52,12 @@ public class Revenue implements Serializable {
 				.royalties(royalties)
 				.build();
 	}
+
+	public static List<RevenueDTO> toDTOs(List<Revenue> revenues) {
+		List<RevenueDTO> dtos = new ArrayList<>();
+		for (Revenue revenue : revenues)
+			dtos.add(revenue.toDTO());
+		return dtos;
+	}
+
 }

@@ -46,7 +46,26 @@ public class RevenueServiceBean implements RevenueService {
 
         if (operator != null)
             sql += " AND operator = :operator";
-        Query query = em.createNamedQuery(sql);
+
+        Query query = em.createNativeQuery(sql)
+                .setParameter("startDate", startDate)
+                .setParameter("endDate", endDate);
+        if (operator != null)
+            query.setParameter("operator", operator);
+
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator) {
+        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(date, SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties))" +
+                " FROM Revenue WHERE date BETWEEN :startDate AND :endDate ";
+        if (operator != null)
+            sql += " AND operator = :operator";
+        sql += " GROUP BY DATE(date) ORDER BY date";
+        Query query = em.createQuery(sql, Revenue.class)
+                .setParameter("startDate", startDate)
+                .setParameter("endDate", endDate);
         if (operator != null)
             query.setParameter("operator", operator);
 
