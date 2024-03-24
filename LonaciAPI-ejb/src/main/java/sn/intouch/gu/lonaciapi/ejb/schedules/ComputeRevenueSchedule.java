@@ -27,7 +27,7 @@ public class ComputeRevenueSchedule {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
 
     // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
-    // @Schedule(dayOfWeek = "*", hour = "00", minute = "30", second = "59", persistent = false)
+    @Schedule(dayOfWeek = "*", hour = "0", minute = "30", second = "5", persistent = false)
     public void launch(Timer timer) {
 
         Date startDate = new Date(new Date().getTime() - 24*3600*1000);
@@ -36,7 +36,7 @@ public class ComputeRevenueSchedule {
         startDate.setMinutes(0);
         startDate.setSeconds(0);
 
-        Date endDate = new Date();
+        Date endDate = new Date(new Date().getTime() - 24*3600*1000);
         endDate.setHours(23);
         endDate.setMinutes(59);
         endDate.setSeconds(59);
