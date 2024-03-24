@@ -58,11 +58,11 @@ public class RevenueServiceBean implements RevenueService {
 
     @Override
     public List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator) {
-        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(date, SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties))" +
+        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(DATE(date), SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties))" +
                 " FROM Revenue WHERE date BETWEEN :startDate AND :endDate ";
         if (operator != null)
             sql += " AND operator = :operator";
-        sql += " GROUP BY DATE(date) ORDER BY date";
+        sql += " GROUP BY DATE(date) ORDER BY DATE(date) ASC";
         Query query = em.createQuery(sql, Revenue.class)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate);
