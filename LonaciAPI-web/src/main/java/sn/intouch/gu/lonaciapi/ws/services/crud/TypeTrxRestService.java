@@ -21,7 +21,7 @@ public class TypeTrxRestService {
     private final CategoryTypeService categoryTypeService = (CategoryTypeService) JNDIUtils
             .lookUpEJB(EJBRegistry.CategoryTypeServiceBean);
 
-    @RequestMapping(value = "/api/v1/typeTrx/{id}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/v2/typeTrx/{id}", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getTypeTrx(@PathVariable String id) {
         TypeTrx typeTrx = typeTrxService.getByCode(id);
         if (typeTrx != null)
@@ -36,7 +36,7 @@ public class TypeTrxRestService {
                 .build(), HttpStatus.NOT_FOUND);
     }
 
-    @RequestMapping(value = "/api/v1/typeTrx", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/v2/typeTrx", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getTypeTrxs() {
         Iterable<TypeTrx> typeTrxs = typeTrxService.findAll();
 
@@ -55,7 +55,7 @@ public class TypeTrxRestService {
         return list;
     }
 
-    @RequestMapping(value = "/api/v1/typeTrx", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/typeTrx", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> createTypeTrx(@RequestBody TypeTrxDTO dto) {
         TypeTrx typeTrx = typeTrxService.getByCode(dto.getCode());
         if (typeTrx != null) {
@@ -82,7 +82,7 @@ public class TypeTrxRestService {
                 .build());
     }
 
-    @RequestMapping(value = "/api/v1/typeTrx/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/typeTrx/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> updateTypeTrx(@RequestBody TypeTrxDTO dto, @PathVariable String id) {
         TypeTrx typeTrx = typeTrxService.getByCode(id);
         if (typeTrx == null)
@@ -107,7 +107,7 @@ public class TypeTrxRestService {
                 .build());
     }
 
-    @RequestMapping(value = "/api/v1/typeTrx/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/typeTrx/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> deleteTypeTrx(@PathVariable String id ) {
         TypeTrx typeTrx = typeTrxService.getByCode(id);
         if (typeTrx == null)

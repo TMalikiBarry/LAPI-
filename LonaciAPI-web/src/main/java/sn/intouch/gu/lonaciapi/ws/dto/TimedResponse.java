@@ -13,8 +13,8 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TrendResponse implements Serializable {
-    private List<Map<String, String>> day;
-    private List<Map<String, String>> week;
-    private List<Map<String, String>> month;
+public class TimedResponse<T> implements Serializable {
+    private T day;
+    private T week;
+    private T month;
 }

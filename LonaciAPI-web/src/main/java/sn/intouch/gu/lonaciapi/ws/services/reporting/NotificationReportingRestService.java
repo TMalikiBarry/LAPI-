@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
+import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxService;
 import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
 import sn.intouch.gu.lonaciapi.ejb.parameter.services.ParameterService;
 import sn.intouch.gu.lonaciapi.ws.constants.AppConstants;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
-import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
 
 import java.util.Date;
 import java.util.List;
@@ -25,8 +25,7 @@ public class NotificationReportingRestService {
     private final LonaciTrxService lonaciNotifService = (LonaciTrxService) JNDIUtils.lookUpEJB(EJBRegistry.LonaciTrxServiceBean);
     private final ParameterService parameterService = (ParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ParameterServiceBean);
 
-
-    @RequestMapping(value = {"/api/v1/filter"}, method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = {"/api/v1/filter", "/api/v2/filter"}, method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse<PaginationResponse<List<LonaciTrx>>>> findAllWithPagination(
             @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER, required = false) int page,
             @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int size,

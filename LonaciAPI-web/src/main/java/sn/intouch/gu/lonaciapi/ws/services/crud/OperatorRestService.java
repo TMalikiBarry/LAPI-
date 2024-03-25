@@ -18,7 +18,7 @@ public class OperatorRestService {
     private final OperatorService operatorService = (OperatorService) JNDIUtils
             .lookUpEJB(EJBRegistry.OperatorServiceBean);
 
-    @RequestMapping(value = "/api/v1/operator/{id}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getOperator(@PathVariable String id) {
         Operator operator = operatorService.findByOperatorID(id);
         if (operator != null)
@@ -33,7 +33,7 @@ public class OperatorRestService {
                 .build(), HttpStatus.NOT_FOUND);
     }
 
-    @RequestMapping(value = "/api/v1/operator", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getOperators() {
         Iterable<Operator> operators = operatorService.getAll();
 
@@ -52,7 +52,7 @@ public class OperatorRestService {
         return list;
     }
 
-    @RequestMapping(value = "/api/v1/operator", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/operator", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> createOperator(@RequestBody OperatorDTO dto) {
         Operator operator = operatorService.findByOperatorID(dto.getIdentifier());
         if (operator != null) {
@@ -70,7 +70,7 @@ public class OperatorRestService {
                 .build());
     }
 
-    @RequestMapping(value = "/api/v1/operator/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> updateOperator(@RequestBody OperatorDTO dto, @PathVariable String id) {
         Operator operator = operatorService.findByOperatorID(id);
         if (operator == null)
@@ -88,7 +88,7 @@ public class OperatorRestService {
                 .build());
     }
 
-    @RequestMapping(value = "/api/v1/operator/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> deleteOperator(@PathVariable String id ) {
         Operator operator = operatorService.findByOperatorID(id);
         if (operator == null)

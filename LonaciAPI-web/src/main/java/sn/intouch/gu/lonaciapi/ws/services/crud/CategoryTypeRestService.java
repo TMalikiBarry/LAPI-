@@ -18,7 +18,7 @@ public class CategoryTypeRestService {
     private final CategoryTypeService categoryTypeService = (CategoryTypeService) JNDIUtils
             .lookUpEJB(EJBRegistry.CategoryTypeServiceBean);
 
-    @RequestMapping(value = "/api/v1/categoryType/{id}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/v2/categoryType/{id}", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getCategoryType(@PathVariable String id) {
         CategoryType categoryType = categoryTypeService.getByCode(id);
         if (categoryType != null)
@@ -33,7 +33,7 @@ public class CategoryTypeRestService {
                 .build(), HttpStatus.NOT_FOUND);
     }
 
-    @RequestMapping(value = "/api/v1/categoryType", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/api/v2/categoryType", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse> getCategoryTypes() {
         Iterable<CategoryType> categoryTypes = categoryTypeService.findAll();
 
@@ -52,7 +52,7 @@ public class CategoryTypeRestService {
         return list;
     }
 
-    @RequestMapping(value = "/api/v1/categoryType", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/categoryType", method = RequestMethod.POST, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> createCategoryType(@RequestBody CategoryTypeDTO dto) {
         CategoryType categoryType = categoryTypeService.getByCode(dto.getCode());
         if (categoryType != null) {
@@ -70,7 +70,7 @@ public class CategoryTypeRestService {
                 .build());
     }
 
-    @RequestMapping(value = "/api/v1/categoryType/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/categoryType/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> updateCategoryType(@RequestBody CategoryTypeDTO dto, @PathVariable String id) {
         CategoryType categoryType = categoryTypeService.getByCode(id);
         if (categoryType == null)
@@ -88,7 +88,7 @@ public class CategoryTypeRestService {
                 .build());
     }
 
-    @RequestMapping(value = "/api/v1/categoryType/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
+    @RequestMapping(value = "/api/v2/categoryType/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> deleteCategoryType(@PathVariable String id ) {
         CategoryType categoryType = categoryTypeService.getByCode(id);
         if (categoryType == null)
