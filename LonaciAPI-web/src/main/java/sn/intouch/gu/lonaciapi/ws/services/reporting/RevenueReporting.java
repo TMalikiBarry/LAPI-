@@ -17,6 +17,7 @@ import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.schedules.ComputeRevenueSchedule;
 import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
+import sn.intouch.gu.lonaciapi.ws.dto.RevenueReformattedResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.RevenueResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
@@ -68,7 +69,7 @@ public class RevenueReporting {
     }
 
     @RequestMapping(value = {"/api/v2/aggregation/revenue-timed"}, method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<APIResponse<TimedResponse<RevenueResponse>>> revenueTimed(
+    public ResponseEntity<APIResponse<RevenueReformattedResponse>> revenueTimed(
             @RequestParam(value = "operator", required = false) String operator
     ) throws RuntimeException {
         Date startDate, endDate;
@@ -83,12 +84,39 @@ public class RevenueReporting {
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
         RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
 
-        TimedResponse<RevenueResponse> response = TimedResponse.<RevenueResponse>builder()
-                .day(dayResponse)
-                .week(weekResponse)
-                .month(monthResponse)
+        RevenueReformattedResponse reformattedResponse = RevenueReformattedResponse.builder()
+                .operator(operator)
+                .grossGamingProduct(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getGrossGamingProduct())
+                                .week(weekResponse.getGrossGamingProduct())
+                                .month(monthResponse.getGrossGamingProduct())
+                                .build()
+                )
+                .integratorRemuneration(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getIntegratorRemuneration())
+                                .week(weekResponse.getIntegratorRemuneration())
+                                .month(monthResponse.getIntegratorRemuneration())
+                                .build()
+                )
+                .revenue(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getRevenue())
+                                .week(weekResponse.getRevenue())
+                                .month(monthResponse.getRevenue())
+                                .build()
+                )
+                .royalties(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getRoyalties())
+                                .week(weekResponse.getRoyalties())
+                                .month(monthResponse.getRoyalties())
+                                .build()
+                )
                 .build();
-        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
+
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", reformattedResponse));
     }
 
     private RevenueResponse buildRevenueResponse(String operator, List<Object[]> dayRevenue, Date startDate, Date endDate) {
