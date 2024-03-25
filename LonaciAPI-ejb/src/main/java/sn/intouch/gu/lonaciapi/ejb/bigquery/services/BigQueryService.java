@@ -9,12 +9,14 @@ import java.util.Map;
 
 @Local
 public interface BigQueryService {
-    List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper);
+
+    List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper,
+                                             Boolean computeVolume, String category);
 
     @Deprecated
     Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operatorId, String type);
 
-    Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type);
+    Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type, Boolean computeVolume, String category);
 
     Integer getActiveClients(Date startDate, Date endDate, String operator, String type);
 

@@ -11,7 +11,6 @@ import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
-import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
 import sn.intouch.gu.lonaciapi.ws.dto.HeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.SubHeaderResponse;
@@ -26,7 +25,6 @@ import java.util.Map;
 @Log4j2
 public class AggregationReportingRestService {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
-    private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
 
     @RequestMapping(value = {"/api/v1/aggregation/curve"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<List<Map<String, String>>>> curve(
@@ -49,7 +47,7 @@ public class AggregationReportingRestService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH, operator, type, true);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH, operator, type, true, null, null);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
@@ -88,7 +86,7 @@ public class AggregationReportingRestService {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        Map<String, String> sumBetweenDates = bigQueryService.getSumBetweenDatesV2(startDate, endDate, operator, type);
+        Map<String, String> sumBetweenDates = bigQueryService.getSumBetweenDatesV2(startDate, endDate, operator, type, null, null);
         Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, type);
         Long operationsNumber = Long.valueOf(sumBetweenDates.get("number"));
         Double overallVolume = Double.valueOf(sumBetweenDates.get("sum"));
@@ -112,9 +110,9 @@ public class AggregationReportingRestService {
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 TrendResponse.builder()
-                        .day(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), AggregationTimeEnum.DAY, operator, type, false))
-                        .week(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), AggregationTimeEnum.WEEK, operator, type, false))
-                        .month(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), AggregationTimeEnum.MONTH, operator, type, false))
+                        .day(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), AggregationTimeEnum.DAY, operator, type, false, null, null))
+                        .week(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), AggregationTimeEnum.WEEK, operator, type, false, null, null))
+                        .month(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), AggregationTimeEnum.MONTH, operator, type, false, null, null))
                         .build()
         ));
     }
@@ -159,7 +157,7 @@ public class AggregationReportingRestService {
         else
             timeEnum = AggregationTimeEnum.YEAR;
 
-        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, timeEnum, operator, type, true);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, timeEnum, operator, type, true, null, null);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }

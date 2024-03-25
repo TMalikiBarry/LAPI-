@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
 import sn.intouch.gu.lonaciapi.ejb.dto.TypeTrxDTO;
 
 import java.io.Serializable;
@@ -51,7 +50,10 @@ public class TypeTrx implements Serializable{
 	private TypeDirection direction;
 
 	@Column(name = "use_to_compute")
-	private Boolean useToCompute = false;
+	private Boolean useToComputeRevenue = true;
+
+	@Column(name = "use_to_compute_volume")
+	private Boolean useToComputeVolume = true;
 
 	@PreUpdate
 	private void updatedDate() {
@@ -66,7 +68,8 @@ public class TypeTrx implements Serializable{
 		return TypeTrxDTO.builder()
 				.code(code)
 				.label(label)
-				.useToCompute(useToCompute)
+				.useToComputeRevenue(useToComputeRevenue)
+				.useToComputeVolume(useToComputeVolume)
 				.direction(direction)
 				.category(category)
 				.build();

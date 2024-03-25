@@ -17,17 +17,23 @@ import static sn.intouch.gu.lonaciapi.ejb.utils.DateUtil.SIMPLE_DATE_FORMAT_WITH
 public class BigQueryServiceBean implements BigQueryService{
 
     @Override
-    public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper) {
+    public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper,
+                                                    Boolean computeVolume, String category) {
         BigQueryConnection connection = new BigQueryConnection();
         System.out.println("START DATE :: " + startDate + " END DATE :: " + endDate);
         try {
             String grouper = formatDateGrouper ? this.getFormattedGrouper(time, "date") : getGrouper(time, "date");
-            String query = "SELECT " + grouper + " ddate, COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
+            String query = "SELECT " + grouper + " ddate, COUNT(*) as number, SUM( CASE WHEN type.direction = 'DEBIT' then - trx.montant ELSE trx.montant END ) as sum" +
+                    " FROM " + connection.getLonaciTableRef() + " trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
-                query += " AND operateur_id = @operator";
+                query += " AND trx.operateur_id = @operator";
             if (type != null)
-                query += " AND type_transaction = @type";
+                query += " AND trx.type_transaction = @type";
+            if (computeVolume != null)
+                query += " AND type.use_to_compute_volume = @computeVolume";
+            if (category != null)
+                query += " AND type.category = @category ";
             query += " GROUP BY ddate ORDER BY ddate ASC;";
 
             QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query);
@@ -39,6 +45,10 @@ public class BigQueryServiceBean implements BigQueryService{
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
+            if (computeVolume != null)
+                queryConfig.addNamedParameter("computeVolume", QueryParameterValue.int64((Boolean.TRUE.equals(computeVolume) ? 1 : 0)));
+            if (category != null)
+                queryConfig.addNamedParameter("category", QueryParameterValue.string(category));
 
             BigQuery bigquery = connection.getConnection();
             TableResult result = bigquery.query(queryConfig.build());
@@ -48,10 +58,11 @@ public class BigQueryServiceBean implements BigQueryService{
             for (FieldValueList row : result.iterateAll()) {
                 Map<String, String> m = new HashMap<>();
                 for (Field field : schema.getFields()) {
+                    String value = this.getStringValue(field.getName(), row.get(field.getName()));
                     if(field.getName().equals("sum"))
-                        m.put(field.getName(), Utils.formatLabelAmount(Double.valueOf(row.get(field.getName()).getStringValue())));
+                        m.put(field.getName(), Utils.formatLabelAmount(Double.valueOf(value)));
                     else
-                        m.put(field.getName(), row.get(field.getName()).getStringValue());
+                        m.put(field.getName(), value);
                 }
                 responses.add(m);
             }
@@ -64,6 +75,7 @@ public class BigQueryServiceBean implements BigQueryService{
     }
 
     @Override
+    @Deprecated
     public Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operator, String type) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
@@ -104,15 +116,21 @@ public class BigQueryServiceBean implements BigQueryService{
         return new HashMap<>();
     }
     @Override
-    public Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type) {
+    public Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type,
+                                                    Boolean computeVolume, String category) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
-            String query = "SELECT COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
+            String query = "SELECT COUNT(*) as number, SUM( CASE WHEN type.direction = 'DEBIT' then - trx.montant ELSE trx.montant END ) as sum " +
+                    "FROM "+ connection.getLonaciTableRef() +" trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
             if (type != null)
                 query += " AND type_transaction = @type";
+            if (computeVolume != null)
+                query += " AND type.use_to_compute_volume = @computeVolume";
+            if (category != null)
+                query += " AND type.category = @category ";
 
             QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
                     .addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
@@ -122,6 +140,10 @@ public class BigQueryServiceBean implements BigQueryService{
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
+            if (computeVolume != null)
+                queryConfig.addNamedParameter("computeVolume", QueryParameterValue.int64((Boolean.TRUE.equals(computeVolume) ? 1 : 0)));
+            if (category != null)
+                queryConfig.addNamedParameter("category", QueryParameterValue.string(category));
 
             BigQuery bigquery = connection.getConnection();
             TableResult result = bigquery.query(queryConfig.build());
@@ -130,10 +152,8 @@ public class BigQueryServiceBean implements BigQueryService{
             Map<String, String> m = new HashMap<>();
             for (FieldValueList row : result.iterateAll()) {
                 for (Field field : schema.getFields()) {
-                    if(field.getName().equals("sum"))
-                        m.put(field.getName(), row.get(field.getName()).getStringValue());
-                    else
-                        m.put(field.getName(), row.get(field.getName()).getStringValue());
+                    String value = this.getStringValue(field.getName(), row.get(field.getName()));
+                    m.put(field.getName(), value);
                 }
                 break;
             }
@@ -170,7 +190,8 @@ public class BigQueryServiceBean implements BigQueryService{
             Schema schema = result.getSchema();
             for (FieldValueList row : result.iterateAll()) {
                 for (Field field : schema.getFields()) {
-                        return Integer.valueOf(row.get(field.getName()).getStringValue());
+                    String value = this.getStringValue(field.getName(), row.get(field.getName()));
+                    return Integer.valueOf(value);
                 }
             }
         } catch (Exception e) {
@@ -208,10 +229,11 @@ public class BigQueryServiceBean implements BigQueryService{
             for (FieldValueList row : result.iterateAll()) {
                 Map<String, String> m = new HashMap<>();
                 for (Field field : schema.getFields()) {
+                    String value = this.getStringValue(field.getName(), row.get(field.getName()));
                     if(field.getName().equals("sum"))
-                        m.put(field.getName(), Utils.formatLabelAmount(Double.valueOf(row.get(field.getName()).getStringValue())));
+                        m.put(field.getName(), Utils.formatLabelAmount(Double.valueOf(value)));
                     else
-                        m.put(field.getName(), row.get(field.getName()).getStringValue());
+                        m.put(field.getName(), value);
                 }
                 responses.add(m);
             }

@@ -128,6 +128,7 @@ public class TypeTrxRestService {
         if (dto.getLabel() != null) typeTrx.setLabel(dto.getLabel());
         if (dto.getCategory() != null) typeTrx.setCategory(dto.getCategory());
         if (dto.getDirection() != null) typeTrx.setDirection(dto.getDirection());
-        if (dto.getUseToCompute() != null) typeTrx.setUseToCompute(dto.getUseToCompute());
+        if (dto.getUseToComputeRevenue() != null) typeTrx.setUseToComputeRevenue(dto.getUseToComputeRevenue());
+        if (dto.getUseToComputeVolume() != null) typeTrx.setUseToComputeVolume(dto.getUseToComputeVolume());
     }
 }
