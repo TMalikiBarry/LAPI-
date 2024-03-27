@@ -64,6 +64,8 @@ public class RevenueReporting {
                 .integratorRemuneration(Double.parseDouble(getStringOr0(dayRevenue.get(0)[1])))
                 .revenue(Double.parseDouble(getStringOr0(dayRevenue.get(0)[2])))
                 .royalties(Double.parseDouble(getStringOr0(dayRevenue.get(0)[3])))
+                .payin(Double.parseDouble(getStringOr0(dayRevenue.get(0)[4])))
+                .payout(Double.parseDouble(getStringOr0(dayRevenue.get(0)[5])))
                 .build();
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
     }
@@ -76,6 +78,7 @@ public class RevenueReporting {
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
         endDate = DateUtil.getEndOfDay();
+        // Date yesterday = new Date(startDate.getTime() - 24 * 3600 * 1000);
         RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
@@ -131,6 +134,8 @@ public class RevenueReporting {
                 .integratorRemuneration(Double.parseDouble(getStringOr0(dayRevenue.get(0)[1])))
                 .revenue(Double.parseDouble(getStringOr0(dayRevenue.get(0)[2])))
                 .royalties(Double.parseDouble(getStringOr0(dayRevenue.get(0)[3])))
+                .payin(Double.parseDouble(getStringOr0(dayRevenue.get(0)[4])))
+                .payout(Double.parseDouble(getStringOr0(dayRevenue.get(0)[5])))
                 .build();
     }
 
@@ -172,14 +177,11 @@ public class RevenueReporting {
         try {
 
             startDate = new Date(Long.parseLong(date));
-            startDate.setHours(0);
             startDate.setMinutes(0);
             startDate.setSeconds(0);
 
-            endDate = new Date(Long.parseLong(date));
-            endDate.setHours(23);
-            endDate.setMinutes(59);
-            endDate.setSeconds(59);
+            endDate = new Date(startDate.getTime() + (3600*1000));
+
             if (endDate.before(startDate))
                 throw new RuntimeException("Bad date format");
         } catch (RuntimeException e) {

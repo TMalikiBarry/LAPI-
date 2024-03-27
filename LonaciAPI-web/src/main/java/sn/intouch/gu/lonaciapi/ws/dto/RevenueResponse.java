@@ -19,4 +19,6 @@ public class RevenueResponse implements Serializable {
     private Double integratorRemuneration = 0D;
     private Double revenue = 0D;
     private Double royalties = 0D;
+    private Double payin = 0D;
+    private Double payout = 0D;
 }

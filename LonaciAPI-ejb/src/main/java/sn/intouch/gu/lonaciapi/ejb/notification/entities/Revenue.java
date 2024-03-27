@@ -33,13 +33,17 @@ public class Revenue implements Serializable {
 	private Double integratorRemuneration;
 	private Double revenue;
 	private Double royalties;
+	private Double payin;
+	private Double payout;
 
-	public Revenue(Date date, Double grossGamingProduct, Double integratorRemuneration, Double revenue, Double royalties) {
+	public Revenue(Date date, Double grossGamingProduct, Double integratorRemuneration, Double revenue, Double royalties, Double payin, Double payout) {
 		this.date = date;
 		this.grossGamingProduct = grossGamingProduct;
 		this.integratorRemuneration = integratorRemuneration;
 		this.revenue = revenue;
 		this.royalties = royalties;
+		this.payin = payin;
+		this.payout = payout;
 	}
 
 	public RevenueDTO toDTO() {
@@ -50,6 +54,8 @@ public class Revenue implements Serializable {
 				.integratorRemuneration(integratorRemuneration)
 				.revenue(revenue)
 				.royalties(royalties)
+				.payin(payin)
+				.payout(payout)
 				.build();
 	}
 

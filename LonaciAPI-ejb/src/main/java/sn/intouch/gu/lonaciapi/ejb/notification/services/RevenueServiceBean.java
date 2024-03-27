@@ -42,7 +42,7 @@ public class RevenueServiceBean implements RevenueService {
 
     @Override
     public List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator) {
-        String sql = "SELECT SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
+        String sql = "SELECT SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), SUM(payout) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
 
         if (operator != null)
             sql += " AND operator = :operator";
@@ -58,7 +58,7 @@ public class RevenueServiceBean implements RevenueService {
 
     @Override
     public List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator) {
-        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(DATE(date), SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties))" +
+        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(DATE(date), SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), SUM(payout))" +
                 " FROM Revenue WHERE date BETWEEN :startDate AND :endDate ";
         if (operator != null)
             sql += " AND operator = :operator";
