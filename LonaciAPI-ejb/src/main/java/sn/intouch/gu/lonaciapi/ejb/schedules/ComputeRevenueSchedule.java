@@ -38,8 +38,14 @@ public class ComputeRevenueSchedule {
     }
 
     public void compute(Date startDate, Date endDate) {
+
         Iterable<Operator> operators = operatorService.getAll();
         for (Operator operator : operators) {
+            Revenue revenueEntity = Revenue.builder()
+                    .date(startDate)
+                    .operator(operator.getOperatorId())
+                    .build();
+            revenueEntity = revenueService.update(revenueEntity);
             try {
                 Map<String, String> mises = bigQueryService.getSumBetweenDatesWithCategoryAndUseToCompute(startDate, endDate, operator.getOperatorId(), "MISES", Boolean.TRUE);
                 // Long misesOperationsNumber = Long.valueOf(mises.get("number"));
@@ -65,17 +71,18 @@ public class ComputeRevenueSchedule {
                 Double integratorRemuneration = 0.04 * payinOverallVolume - 0.02 * payoutOverallVolume;
                 Double revenue = grossGamingProduct - integratorRemuneration;
                 Double royalties = 0.5 * revenue;
-                Revenue revenueEntity = Revenue.builder()
-                        .date(startDate)
-                        .operator(operator.getOperatorId())
-                        .grossGamingProduct(grossGamingProduct)
-                        .integratorRemuneration(integratorRemuneration)
-                        .revenue(revenue)
-                        .royalties(royalties)
-                        .payin(payinOverallVolume)
-                        .payout(payoutOverallVolume)
-                        .build();
-                revenueService.save(revenueEntity);
+
+                revenueEntity.setGrossGamingProduct(grossGamingProduct);
+                revenueEntity.setIntegratorRemuneration(integratorRemuneration);
+                revenueEntity.setRevenue(revenue);
+                revenueEntity.setRoyalties(royalties);
+                revenueEntity.setPayin(payinOverallVolume);
+                revenueEntity.setPayout(payoutOverallVolume);
+                revenueEntity.setMises(misesOverallVolume);
+                revenueEntity.setGain(gainsOverallVolume);
+                revenueEntity.setBonus(bonusOverallVolume);
+
+                revenueService.update(revenueEntity);
             } catch (Exception e) {
                 log.error("An error occurred while computing revenue :: ", e);
             }

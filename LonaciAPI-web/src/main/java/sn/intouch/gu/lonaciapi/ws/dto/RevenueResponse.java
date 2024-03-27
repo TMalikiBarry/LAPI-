@@ -21,4 +21,7 @@ public class RevenueResponse implements Serializable {
     private Double royalties = 0D;
     private Double payin = 0D;
     private Double payout = 0D;
+    private Double mises = 0D;
+    private Double gain = 0D;
+    private Double bonus = 0D;
 }

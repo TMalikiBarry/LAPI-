@@ -1,5 +1,6 @@
 package sn.intouch.gu.lonaciapi.ejb.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,7 @@ import java.io.Serializable;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class RevenueDTO implements Serializable{
 
@@ -22,16 +24,8 @@ public class RevenueDTO implements Serializable{
 	private Double royalties;
 	private Double payin;
 	private Double payout;
+	private Double mises;
+	private Double gain;
+	private Double bonus;
 
-	public RevenueDTO(String date, String operator, Double grossGamingProduct, Double integratorRemuneration,
-					  Double revenue, Double royalties, Double payin, Double payout) {
-		this.date = DateUtil.SIMPLE_DATE_FORMAT.format(date);
-		this.operator = operator;
-		this.grossGamingProduct = grossGamingProduct;
-		this.integratorRemuneration = integratorRemuneration;
-		this.revenue = revenue;
-		this.royalties = royalties;
-		this.payin = payin;
-		this.payout = payout;
-	}
 }

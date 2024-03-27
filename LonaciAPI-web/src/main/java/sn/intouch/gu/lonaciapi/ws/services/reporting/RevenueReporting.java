@@ -88,7 +88,6 @@ public class RevenueReporting {
         RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
 
         RevenueReformattedResponse reformattedResponse = RevenueReformattedResponse.builder()
-                .operator(operator)
                 .grossGamingProduct(
                         TimedResponse.<Double>builder()
                                 .day(dayResponse.getGrossGamingProduct())
@@ -115,6 +114,39 @@ public class RevenueReporting {
                                 .day(dayResponse.getRoyalties())
                                 .week(weekResponse.getRoyalties())
                                 .month(monthResponse.getRoyalties())
+                                .build()
+                )
+                .payin(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getPayin())
+                                .week(weekResponse.getPayin())
+                                .month(monthResponse.getPayin())
+                                .build()
+                )
+                .payout(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getPayout())
+                                .week(weekResponse.getPayout())
+                                .month(monthResponse.getPayout())
+                                .build()
+                )
+                .mises(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getMises())
+                                .week(weekResponse.getMises())
+                                .month(monthResponse.getMises())
+                                .build()
+                ).gain(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getGain())
+                                .week(weekResponse.getGain())
+                                .month(monthResponse.getGain())
+                                .build()
+                ).bonus(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getBonus())
+                                .week(weekResponse.getBonus())
+                                .month(monthResponse.getBonus())
                                 .build()
                 )
                 .build();

@@ -9,7 +9,9 @@ import java.util.List;
 @Local
 public interface RevenueService {
 	
-	void save(Revenue typeTrx);
+	void add(Revenue typeTrx);
+
+	Revenue update(Revenue revenue);
 
 	Iterable<Revenue> findByDateAndOperator(Date start, Date end, String operator);
 

@@ -28,8 +28,13 @@ public class RevenueServiceBean implements RevenueService {
     }
 
     @Override
-    public void save(Revenue revenue) {
+    public void add(Revenue revenue) {
         em.persist(revenue);
+    }
+
+    @Override
+    public Revenue update(Revenue revenue) {
+        return em.merge(revenue);
     }
 
     @Override
@@ -42,7 +47,8 @@ public class RevenueServiceBean implements RevenueService {
 
     @Override
     public List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator) {
-        String sql = "SELECT SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), SUM(payout) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
+        String sql = "SELECT SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), " +
+                "SUM(payout), SUM(mises), SUM(gain), SUM(bonus) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
 
         if (operator != null)
             sql += " AND operator = :operator";
@@ -58,7 +64,8 @@ public class RevenueServiceBean implements RevenueService {
 
     @Override
     public List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator) {
-        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(DATE(date), SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), SUM(payout))" +
+        String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(DATE(date), SUM(grossGamingProduct), " +
+                "SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), SUM(payout), SUM(mises), SUM(gain), SUM(bonus))" +
                 " FROM Revenue WHERE date BETWEEN :startDate AND :endDate ";
         if (operator != null)
             sql += " AND operator = :operator";

@@ -17,4 +17,9 @@ public class RevenueReformattedResponse implements Serializable {
     private TimedResponse<Double> integratorRemuneration;
     private TimedResponse<Double> revenue;
     private TimedResponse<Double> royalties;
+    private TimedResponse<Double> payin;
+    private TimedResponse<Double> payout;
+    private TimedResponse<Double> mises;
+    private TimedResponse<Double> gain;
+    private TimedResponse<Double> bonus;
 }
