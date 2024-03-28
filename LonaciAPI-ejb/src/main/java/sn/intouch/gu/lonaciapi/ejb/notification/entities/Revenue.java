@@ -28,6 +28,7 @@ public class Revenue implements Serializable {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Long id;
 	private Date date;
+	private Date endDate;
 	private String operator;
 	private Double grossGamingProduct;
 	private Double integratorRemuneration;

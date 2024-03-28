@@ -12,6 +12,7 @@ import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
@@ -27,22 +28,27 @@ public class ComputeRevenueSchedule {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
 
     // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
-    // @Schedule(dayOfWeek = "*", hour = "0", minute = "30", second = "5", persistent = false)
-    @Schedule(dayOfWeek = "*", hour = "*/1", persistent = false)
+    @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
     public void launch(Timer timer) {
 
-        Date startDate = new Date(new Date().getTime() - 3600 * 1000);
-        Date endDate = new Date();
-
+        Calendar cal = Calendar.getInstance(); // locale-specific
+        cal.setTime(new Date());
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        Date endDate = new Date(cal.getTimeInMillis());
+        cal.add(Calendar.HOUR, -1);
+        Date startDate = new Date(cal.getTimeInMillis());
         compute(startDate, endDate);
     }
 
     public void compute(Date startDate, Date endDate) {
-
+        log.info("Running JOB for computing revenue at : START DATE " + startDate + " AND END DATE : " + endDate);
         Iterable<Operator> operators = operatorService.getAll();
         for (Operator operator : operators) {
             Revenue revenueEntity = Revenue.builder()
                     .date(startDate)
+                    .endDate(endDate)
                     .operator(operator.getOperatorId())
                     .build();
             revenueEntity = revenueService.update(revenueEntity);
