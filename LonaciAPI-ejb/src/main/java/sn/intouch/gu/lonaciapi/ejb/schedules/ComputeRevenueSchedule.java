@@ -46,52 +46,45 @@ public class ComputeRevenueSchedule {
         log.info("Running JOB for computing revenue at : START DATE " + startDate + " AND END DATE : " + endDate);
         Iterable<Operator> operators = operatorService.getAll();
         for (Operator operator : operators) {
+            computeForOperator(startDate, endDate, operator.getOperatorId());
+        }
+    }
+
+    public void computeForOperator(Date startDate, Date endDate, String operator) {
+
+        try {
             Revenue revenueEntity = Revenue.builder()
                     .date(startDate)
                     .endDate(endDate)
-                    .operator(operator.getOperatorId())
+                    .operator(operator)
                     .build();
             revenueEntity = revenueService.update(revenueEntity);
-            try {
-                Map<String, String> mises = bigQueryService.getSumBetweenDatesWithCategoryAndUseToCompute(startDate, endDate, operator.getOperatorId(), "MISES", Boolean.TRUE);
-                // Long misesOperationsNumber = Long.valueOf(mises.get("number"));
-                Double misesOverallVolume = Double.valueOf(mises.get("sum"));
+            Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator, null, Boolean.TRUE);
 
-                Map<String, String> gains = bigQueryService.getSumBetweenDatesWithCategoryAndUseToCompute(startDate, endDate, operator.getOperatorId(), "GAIN", Boolean.TRUE);
-                // Long gainsOperationsNumber = Long.valueOf(gains.get("number"));
-                Double gainsOverallVolume = Double.valueOf(gains.get("sum"));
+            Double misesOverallVolume = Double.valueOf(values.get("mises"));
+            Double gainsOverallVolume = Double.valueOf(values.get("gains"));
+            Double bonusOverallVolume = Double.valueOf(values.get("bonus"));
+            Double payinOverallVolume = Double.valueOf(values.get("payin"));
+            Double payoutOverallVolume = Double.valueOf(values.get("payout"));
 
-                Map<String, String> bonus = bigQueryService.getSumBetweenDatesWithCategoryAndUseToCompute(startDate, endDate, operator.getOperatorId(), "BONUS", Boolean.TRUE);
-                // Long bonusOperationsNumber = Long.valueOf(bonus.get("number"));
-                Double bonusOverallVolume = Double.valueOf(bonus.get("sum"));
+            Double grossGamingProduct = misesOverallVolume - Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume);
+            Double integratorRemuneration = 0.04 * payinOverallVolume - 0.02 * payoutOverallVolume;
+            Double revenue = grossGamingProduct - integratorRemuneration;
+            Double royalties = 0.5 * revenue;
 
-                Map<String, String> payin = bigQueryService.getSumBetweenDatesWithCategoryAndUseToCompute(startDate, endDate, operator.getOperatorId(), "PAY_IN", Boolean.TRUE);
-                // Long payinOperationsNumber = Long.valueOf(payin.get("number"));
-                Double payinOverallVolume = Double.valueOf(payin.get("sum"));
+            revenueEntity.setGrossGamingProduct(grossGamingProduct);
+            revenueEntity.setIntegratorRemuneration(integratorRemuneration);
+            revenueEntity.setRevenue(revenue);
+            revenueEntity.setRoyalties(royalties);
+            revenueEntity.setPayin(payinOverallVolume);
+            revenueEntity.setPayout(payoutOverallVolume);
+            revenueEntity.setMises(misesOverallVolume);
+            revenueEntity.setGain(gainsOverallVolume);
+            revenueEntity.setBonus(bonusOverallVolume);
 
-                Map<String, String> payout = bigQueryService.getSumBetweenDatesWithCategoryAndUseToCompute(startDate, endDate, operator.getOperatorId(), "PAY_OUT", Boolean.TRUE);
-                // Long payoutOperationsNumber = Long.valueOf(payout.get("number"));
-                Double payoutOverallVolume = Double.valueOf(payout.get("sum"));
-
-                Double grossGamingProduct = misesOverallVolume - (gainsOverallVolume + bonusOverallVolume);
-                Double integratorRemuneration = 0.04 * payinOverallVolume - 0.02 * payoutOverallVolume;
-                Double revenue = grossGamingProduct - integratorRemuneration;
-                Double royalties = 0.5 * revenue;
-
-                revenueEntity.setGrossGamingProduct(grossGamingProduct);
-                revenueEntity.setIntegratorRemuneration(integratorRemuneration);
-                revenueEntity.setRevenue(revenue);
-                revenueEntity.setRoyalties(royalties);
-                revenueEntity.setPayin(payinOverallVolume);
-                revenueEntity.setPayout(payoutOverallVolume);
-                revenueEntity.setMises(misesOverallVolume);
-                revenueEntity.setGain(gainsOverallVolume);
-                revenueEntity.setBonus(bonusOverallVolume);
-
-                revenueService.update(revenueEntity);
-            } catch (Exception e) {
-                log.error("An error occurred while computing revenue :: ", e);
-            }
+            revenueService.update(revenueEntity);
+        } catch (Exception e) {
+            log.error("An error occurred while computing revenue :: ", e);
         }
     }
 }

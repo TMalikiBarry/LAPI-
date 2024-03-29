@@ -22,6 +22,7 @@ import sn.intouch.gu.lonaciapi.ws.dto.RevenueResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -78,7 +79,7 @@ public class RevenueReporting {
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
         endDate = DateUtil.getEndOfDay();
-        // Date yesterday = new Date(startDate.getTime() - 24 * 3600 * 1000);
+
         RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
@@ -168,6 +169,9 @@ public class RevenueReporting {
                 .royalties(Double.parseDouble(getStringOr0(dayRevenue.get(0)[3])))
                 .payin(Double.parseDouble(getStringOr0(dayRevenue.get(0)[4])))
                 .payout(Double.parseDouble(getStringOr0(dayRevenue.get(0)[5])))
+                .mises(Double.parseDouble(getStringOr0(dayRevenue.get(0)[6])))
+                .gain(Double.parseDouble(getStringOr0(dayRevenue.get(0)[7])))
+                .bonus(Double.parseDouble(getStringOr0(dayRevenue.get(0)[8])))
                 .build();
     }
 
@@ -202,17 +206,22 @@ public class RevenueReporting {
 
     @RequestMapping(value = {"/api/v2/aggregation/launch-schedule"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<String>> test(
-            @RequestParam(value = "date") String date
+            @RequestParam(value = "date") String date,
+            @RequestParam(value = "operateur") String operateur
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
         try {
-
             startDate = new Date(Long.parseLong(date));
-            startDate.setMinutes(0);
-            startDate.setSeconds(0);
 
-            endDate = new Date(startDate.getTime() + (3600*1000));
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(startDate);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            startDate = new Date(cal.getTimeInMillis());
+            cal.add(Calendar.HOUR, 1);
+            endDate = new Date(cal.getTimeInMillis());
 
             if (endDate.before(startDate))
                 throw new RuntimeException("Bad date format");
@@ -223,7 +232,10 @@ public class RevenueReporting {
         }
         log.info("Start Date :: " + startDate);
         log.info("End Date :: " + endDate);
-        new ComputeRevenueSchedule().compute(startDate, endDate);
+        if (operateur != null)
+            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operateur);
+        else
+            new ComputeRevenueSchedule().compute(startDate, endDate);
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", ""));
     }
 

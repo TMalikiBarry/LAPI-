@@ -163,6 +163,134 @@ public class BigQueryServiceBean implements BigQueryService{
         }
         return new HashMap<>();
     }
+    @Override
+    public Map<String, String> getSumBetweenDatesAllCategories(Date startDate, Date endDate, String operator, String type,
+                                                               Boolean computeVolume) {
+        try {
+            BigQueryConnection connection = new BigQueryConnection();
+            String query = "SELECT  " +
+                    "  SUM( " +
+                    "    CASE WHEN type.category = 'BONUS' " +
+                    "    THEN " +
+                    "      CASE WHEN type.direction = 'CREDIT' " +
+                    "      then trx.montant  " +
+                    "      ELSE - trx.montant  " +
+                    "      END " +
+                    "    ELSE 0 " +
+                    "    END " +
+                    "  ) as bonus, " +
+                    "  SUM( " +
+                    "    CASE WHEN type.category = 'MISES' " +
+                    "    THEN " +
+                    "      CASE WHEN type.direction = 'CREDIT' " +
+                    "      then trx.montant  " +
+                    "      ELSE - trx.montant  " +
+                    "      END " +
+                    "    ELSE 0 " +
+                    "    END " +
+                    "  ) as mises, " +
+                    "  SUM( " +
+                    "    CASE WHEN type.category = 'GAIN' " +
+                    "    THEN " +
+                    "      CASE WHEN type.direction = 'CREDIT' " +
+                    "      then trx.montant  " +
+                    "      ELSE - trx.montant  " +
+                    "      END " +
+                    "    ELSE 0 " +
+                    "    END " +
+                    "  ) as gain, " +
+                    "  SUM( " +
+                    "    CASE WHEN type.category = 'PAY_IN' " +
+                    "    THEN " +
+                    "      CASE WHEN type.direction = 'CREDIT' " +
+                    "      then trx.montant  " +
+                    "      ELSE - trx.montant  " +
+                    "      END " +
+                    "    ELSE 0 " +
+                    "    END " +
+                    "  ) as payin, " +
+                    "  SUM( " +
+                    "    CASE WHEN type.category = 'PAY_OUT' " +
+                    "    THEN " +
+                    "      CASE WHEN type.direction = 'CREDIT' " +
+                    "      then trx.montant  " +
+                    "      ELSE - trx.montant  " +
+                    "      END " +
+                    "    ELSE 0 " +
+                    "    END " +
+                    "  ) as payout, " +
+                    "  COUNT( " +
+                    "    CASE WHEN type.category = 'BONUS' " +
+                    "    THEN 1 " +
+                    "    END " +
+                    "  ) as bonusCount, " +
+                    "  COUNT( " +
+                    "    CASE WHEN type.category = 'MISES' " +
+                    "    THEN 1 " +
+                    "    END " +
+                    "  ) as misesCount, " +
+                    "  COUNT( " +
+                    "    CASE WHEN type.category = 'GAIN' " +
+                    "    THEN 1 " +
+                    "    END " +
+                    "  ) as gainCount, " +
+                    "  COUNT( " +
+                    "    CASE WHEN type.category = 'PAY_IN' " +
+                    "    THEN 1 " +
+                    "    END " +
+                    "  ) as payinCount, " +
+                    "  COUNT( " +
+                    "    CASE WHEN type.category = 'PAY_OUT' " +
+                    "    THEN 1 " +
+                    "    END " +
+                    "  ) as payoutCount " +
+                    "  FROM " + connection.getLonaciTableRef() + " trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code " +
+                    "  WHERE trx.date BETWEEN @startDate AND @endDate ";
+
+            if (type != null)
+                query += " AND trx.type_transaction = @type";
+            if (computeVolume != null)
+                query += " AND type.use_to_compute = @use_to_compute";
+            if (operator != null) {
+                query += " AND trx.operateur_id = @operator\n";
+            }
+
+            if (operator != null && type != null) {
+                query += " GROUP BY trx.operateur_id, trx.type ";
+            } else if (operator != null) {
+                query += " GROUP BY trx.operateur_id ";
+            } else if (type != null) {
+                query += " GROUP BY trx.type ";
+            }
+            QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query)
+                    .addNamedParameter("startDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(startDate)))
+                    .addNamedParameter("endDate", QueryParameterValue.dateTime(SIMPLE_DATE_FORMAT_WITH_HOUR.format(endDate)));
+
+            if (operator != null)
+                queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (type != null)
+                queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
+            if (computeVolume != null)
+                queryConfig.addNamedParameter("use_to_compute", QueryParameterValue.int64((Boolean.TRUE.equals(computeVolume) ? 1 : 0)));
+
+            BigQuery bigquery = connection.getConnection();
+            TableResult result = bigquery.query(queryConfig.build());
+
+            Schema schema = result.getSchema();
+            Map<String, String> m = new HashMap<>();
+            for (FieldValueList row : result.iterateAll()) {
+                for (Field field : schema.getFields()) {
+                    String value = this.getStringValue(field.getName(), row.get(field.getName()));
+                    m.put(field.getName(), value);
+                }
+                break;
+            }
+            return m;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new HashMap<>();
+    }
 
     @Override
     public Integer getActiveClients(Date startDate, Date endDate, String operator, String type) {

@@ -77,7 +77,7 @@ public class AggregationReportingRestServiceV2 {
     }
 
     @RequestMapping(value = {"/api/v2/aggregation/sub-header"}, method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<APIResponse<CategorisationResponse<SubHeaderResponse>>> subHeader(
+    public ResponseEntity<APIResponse<CategorisationResponse<SubHeaderResponse>>> subHeaderV2(
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
@@ -95,23 +95,27 @@ public class AggregationReportingRestServiceV2 {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, null);
+        Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator, null, null);
+        values.put("activeClients", activeClients + "");
+        log.info("Flatten DATA :: " + values);
         CategorisationResponse<SubHeaderResponse> response = CategorisationResponse.<SubHeaderResponse>builder()
-                .payin(getSubHeaderResponse(operator, type, startDate, endDate, "PAY_IN"))
-                .payout(getSubHeaderResponse(operator, type, startDate, endDate, "PAY_OUT"))
-                .bonus(getSubHeaderResponse(operator, type, startDate, endDate, "BONUS"))
-                .mises(getSubHeaderResponse(operator, type, startDate, endDate, "MISES"))
-                .gain(getSubHeaderResponse(operator, type, startDate, endDate, "GAIN"))
+                .payin(getSubHeaderResponse(values, "payin"))
+                .payout(getSubHeaderResponse(values, "payout"))
+                .mises(getSubHeaderResponse(values, "mises"))
+                .gain(getSubHeaderResponse(values, "gain"))
+                .bonus(getSubHeaderResponse(values, "bonus"))
                 .build();
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 response
         ));
     }
 
-    private SubHeaderResponse getSubHeaderResponse(String operator, String type, Date startDate, Date endDate, String category) {
-        Map<String, String> sumBetweenDates = bigQueryService.getSumBetweenDatesV2(startDate, endDate, operator, type, null, category);
-        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, type);
-        Long operationsNumber = sumBetweenDates.get("number") != null ? Long.parseLong(sumBetweenDates.get("number")) : 0L;
-        Double overallVolume = sumBetweenDates.get("sum") != null ? Double.parseDouble(sumBetweenDates.get("sum")) : 0D;
+    private SubHeaderResponse getSubHeaderResponse(Map<String, String> values, String type) {
+
+        Long operationsNumber = values.get(type + "Count") != null ? Long.parseLong(values.get(type + "Count")) : 0L;
+        Double overallVolume = values.get(type) != null ? Double.parseDouble(values.get(type)) : 0D;
+        Integer activeClients = values.get("activeClients") != null ? Integer.parseInt(values.get("activeClients")) : 0;
         Double averageCart = overallVolume / operationsNumber;
         return SubHeaderResponse.builder()
                 .activeClients(activeClients)

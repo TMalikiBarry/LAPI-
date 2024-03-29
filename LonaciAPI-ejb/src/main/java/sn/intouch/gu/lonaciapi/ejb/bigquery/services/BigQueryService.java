@@ -18,6 +18,9 @@ public interface BigQueryService {
 
     Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type, Boolean computeVolume, String category);
 
+    Map<String, String> getSumBetweenDatesAllCategories(Date startDate, Date endDate, String operator, String type,
+                                                        Boolean computeVolume);
+
     Integer getActiveClients(Date startDate, Date endDate, String operator, String type);
 
     List<Map<String, String>> getSumClientsBetweenDates(Date startDate, Date endDate, String operator, String type);

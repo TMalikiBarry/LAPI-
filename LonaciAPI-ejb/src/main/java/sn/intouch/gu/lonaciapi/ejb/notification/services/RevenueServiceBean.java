@@ -48,7 +48,7 @@ public class RevenueServiceBean implements RevenueService {
     @Override
     public List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator) {
         String sql = "SELECT SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), " +
-                "SUM(payout), SUM(mises), SUM(gain), SUM(bonus) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
+                " SUM(payout), SUM(mises), SUM(gain), SUM(bonus) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
 
         if (operator != null)
             sql += " AND operator = :operator";
