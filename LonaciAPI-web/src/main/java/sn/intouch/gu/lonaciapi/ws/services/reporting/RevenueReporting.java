@@ -155,23 +155,23 @@ public class RevenueReporting {
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", reformattedResponse));
     }
 
-    private RevenueResponse buildRevenueResponse(String operator, List<Object[]> dayRevenue, Date startDate, Date endDate) {
-        if (dayRevenue == null || dayRevenue.isEmpty()) {
+    private RevenueResponse buildRevenueResponse(String operator, List<Object[]> dataRevenue, Date startDate, Date endDate) {
+        if (dataRevenue == null || dataRevenue.isEmpty()) {
             return null;
         }
         return RevenueResponse.builder()
                 .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
                 .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
                 .operator(operator)
-                .grossGamingProduct(Double.parseDouble(getStringOr0(dayRevenue.get(0)[0])))
-                .integratorRemuneration(Double.parseDouble(getStringOr0(dayRevenue.get(0)[1])))
-                .revenue(Double.parseDouble(getStringOr0(dayRevenue.get(0)[2])))
-                .royalties(Double.parseDouble(getStringOr0(dayRevenue.get(0)[3])))
-                .payin(Double.parseDouble(getStringOr0(dayRevenue.get(0)[4])))
-                .payout(Double.parseDouble(getStringOr0(dayRevenue.get(0)[5])))
-                .mises(Double.parseDouble(getStringOr0(dayRevenue.get(0)[6])))
-                .gain(Double.parseDouble(getStringOr0(dayRevenue.get(0)[7])))
-                .bonus(Double.parseDouble(getStringOr0(dayRevenue.get(0)[8])))
+                .grossGamingProduct(Double.parseDouble(getStringOr0(dataRevenue.get(0)[0])))
+                .integratorRemuneration(Double.parseDouble(getStringOr0(dataRevenue.get(0)[1])))
+                .revenue(Double.parseDouble(getStringOr0(dataRevenue.get(0)[2])))
+                .royalties(Double.parseDouble(getStringOr0(dataRevenue.get(0)[3])))
+                .payin(Double.parseDouble(getStringOr0(dataRevenue.get(0)[4])))
+                .payout(Double.parseDouble(getStringOr0(dataRevenue.get(0)[5])))
+                .mises(Double.parseDouble(getStringOr0(dataRevenue.get(0)[6])))
+                .gain(Double.parseDouble(getStringOr0(dataRevenue.get(0)[7])))
+                .bonus(Double.parseDouble(getStringOr0(dataRevenue.get(0)[8])))
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package sn.intouch.gu.lonaciapi.ejb.schedules;
 
+import com.google.gson.Gson;
 import lombok.extern.log4j.Log4j2;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -60,9 +61,9 @@ public class ComputeRevenueSchedule {
                     .build();
             revenueEntity = revenueService.update(revenueEntity);
             Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator, null, Boolean.TRUE);
-
+            log.info("Revenue Computed :: " + new Gson().toJson(values));
             Double misesOverallVolume = Double.valueOf(values.get("mises"));
-            Double gainsOverallVolume = Double.valueOf(values.get("gains"));
+            Double gainsOverallVolume = Double.valueOf(values.get("gain"));
             Double bonusOverallVolume = Double.valueOf(values.get("bonus"));
             Double payinOverallVolume = Double.valueOf(values.get("payin"));
             Double payoutOverallVolume = Double.valueOf(values.get("payout"));
