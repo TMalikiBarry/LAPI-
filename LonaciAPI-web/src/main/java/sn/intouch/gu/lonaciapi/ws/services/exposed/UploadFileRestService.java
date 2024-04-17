@@ -14,6 +14,8 @@ import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxTempService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.TypeTrxService;
 import sn.intouch.gu.lonaciapi.ejb.utils.TokenGenerator;
+import sn.intouch.gu.lonaciapi.ws.dto.FileUploadResponse;
+import sn.intouch.gu.lonaciapi.ws.dto.FileUploadResponseExchangeStats;
 import sn.intouch.gu.lonaciapi.ws.models.NotificationExchange;
 import sn.intouch.gu.lonaciapi.ws.models.TransactionNotifResponse;
 
@@ -23,7 +25,9 @@ import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @RestController
 public class UploadFileRestService {
@@ -36,10 +40,15 @@ public class UploadFileRestService {
 
     //@RequestMapping(value = "/api/v1/upload", method = RequestMethod.POST)
     @PostMapping("/api/v1/upload")
-    public TransactionNotifResponse uploadFile(@RequestParam("file") MultipartFile file ) {
-        TransactionNotifResponse response = new TransactionNotifResponse();
+    public Object uploadFile(@RequestParam("file") MultipartFile file ) {
+
+        FileUploadResponseExchangeStats stats  = new FileUploadResponseExchangeStats() ;
+
         // exchange
-        NotificationExchange exchange = new NotificationExchange() ;
+
+
+        List<FileUploadResponse> success = new ArrayList<>() ;
+        List<FileUploadResponse> echecs = new ArrayList<>() ;
 
         System.out.println(file.getOriginalFilename());
 
@@ -50,6 +59,8 @@ public class UploadFileRestService {
 
             String line;
             while ((line = reader.readLine()) != null) {
+
+                NotificationExchange exchange = new NotificationExchange() ;
 
                 ParseJson exchangeParse = gson.fromJson(line, ParseJson.class) ;
                 exchange.setOperatorID(exchangeParse.getOperatorID());
@@ -75,7 +86,7 @@ public class UploadFileRestService {
                                     notif = lonaciTrxTempService.saveTransaction(notif);
 
                                     if (notif == null) {
-                                        System.out.println("notif null");
+
                                         Date date = new Date(exchange.getDate());
                                         notif = lonaciTrxTempService.getTrxTempByIdFromPartnerBetweenDates(
                                                 exchange.getOperatorTransactionID(), atStartOfDay(date), atEndOfDay(date));
@@ -85,30 +96,37 @@ public class UploadFileRestService {
                                     } else
                                         System.out.println("New Notification :: " + notif.getIdFromPartner());
 
+                                    TransactionNotifResponse response = new TransactionNotifResponse();
                                     response.setLonaciTransactionID(token);
                                     response.setErrorCode("200");
                                     response.setErrorMessage("SUCCESS");
+                                    success.add(new FileUploadResponse(response, exchange)) ;
                                     //return response;
                                 }
                                 else {
+                                    TransactionNotifResponse response = new TransactionNotifResponse();
                                     response.setErrorCode("404");
                                     response.setErrorMessage("Transaction type not found");
-                                    return response ;
+                                    echecs.add(new FileUploadResponse(response, exchange)) ;
                                 }
                             }
                             else {
+                                TransactionNotifResponse response = new TransactionNotifResponse();
                                 response.setErrorCode("404");
                                 response.setErrorMessage("Cannot find operator");
-                                return  response ;
+                                echecs.add(new FileUploadResponse(response, exchange)) ;
+
                             }
                         }
                         else {
+                            TransactionNotifResponse response = new TransactionNotifResponse();
                             response.setErrorCode("400");
                             response.setErrorMessage("Please provide the required fields");
-                            return response ;
+                            echecs.add(new FileUploadResponse(response, exchange)) ;
                         }
 
                     } else {
+                        TransactionNotifResponse response = new TransactionNotifResponse();
                         response.setErrorCode("500");
                         response.setErrorMessage("An error occurred while handling the request");
                         return response ;
@@ -116,19 +134,30 @@ public class UploadFileRestService {
 
             }
 
+
+            stats.setEchecs(echecs);
+            stats.setSuccess(success);
+            return stats ;
+
         } catch (IOException e) {
+
+            TransactionNotifResponse response = new TransactionNotifResponse();
             e.printStackTrace();
             response.setErrorCode("500");
             response.setErrorMessage("An error occurred while reading the file.");
+            return response ;
 
         } catch (Exception e) {
+
+            TransactionNotifResponse response = new TransactionNotifResponse();
             e.printStackTrace();
             response.setErrorCode("500");
             response.setErrorMessage("An error occurred while processing the file.");
+            return response ;
 
         }
 
-        return response;
+
     }
 
     private boolean areFieldsOk(NotificationExchange exchange) {
