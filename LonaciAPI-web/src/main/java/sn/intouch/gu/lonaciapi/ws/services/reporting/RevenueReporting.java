@@ -67,6 +67,9 @@ public class RevenueReporting {
                 .royalties(Double.parseDouble(getStringOr0(dayRevenue.get(0)[3])))
                 .payin(Double.parseDouble(getStringOr0(dayRevenue.get(0)[4])))
                 .payout(Double.parseDouble(getStringOr0(dayRevenue.get(0)[5])))
+                .mises(Double.parseDouble(getStringOr0(dayRevenue.get(0)[6])))
+                .gain(Double.parseDouble(getStringOr0(dayRevenue.get(0)[7])))
+                .bonus(Double.parseDouble(getStringOr0(dayRevenue.get(0)[8])))
                 .build();
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
     }

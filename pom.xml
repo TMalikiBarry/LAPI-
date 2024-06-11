@@ -32,12 +32,20 @@
         <module>LonaciAPI-ear</module>
     </modules>
 
+    <repositories>
+        <repository>
+            <id>jboss</id>
+            <name>jboss repo</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/</url>
+        </repository>
+    </repositories>
+
     <properties>
         <!-- Explicitly declaring the source encoding eliminates the following 
             message: -->
         <!-- [WARNING] Using platform encoding (UTF-8 actually) to copy filtered 
             resources, i.e. build is platform dependent! -->
-        <version.project>1.7.12</version.project>
+        <version.project>1.7.13</version.project>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- JBoss dependency versions -->
