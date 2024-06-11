@@ -72,7 +72,7 @@
                     </modules>
                     <outputFileNameMapping>@{artifactId}@@{dashClassifier?}@.@{extension}@</outputFileNameMapping>
                 </configuration>
-            </plugin>
+            </plugin> 
             <!-- The WildFly plug-in deploys your ear to a local JBoss EAP container. 
                 Due to Maven's lack of intelligence with EARs we need to configure
                 the WildFly Maven plug-in to skip deployment for all modules. We then enable

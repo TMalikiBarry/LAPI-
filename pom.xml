@@ -67,6 +67,13 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.source>1.8</maven.compiler.source>
     </properties>
+    <repositories>
+		<repository>
+			<id>jboss</id>
+		    <name>repo JBOSS</name>
+		    <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases/</url>
+		</repository>
+	</repositories>
     
     <dependencyManagement>
         <dependencies>
