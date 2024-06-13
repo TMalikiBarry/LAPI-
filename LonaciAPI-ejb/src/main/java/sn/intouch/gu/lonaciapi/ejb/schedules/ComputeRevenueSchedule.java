@@ -70,7 +70,7 @@ public class ComputeRevenueSchedule {
 
             Double grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));
             Double integratorRemuneration = 0.04 * Math.abs(payinOverallVolume) + 0.02 * Math.abs(payoutOverallVolume);
-            Double revenue = Math.abs(grossGamingProduct) - Math.abs(integratorRemuneration);
+            Double revenue = grossGamingProduct - Math.abs(integratorRemuneration);
             Double royalties = 0.5 * revenue;
 
             revenueEntity.setGrossGamingProduct(grossGamingProduct);
