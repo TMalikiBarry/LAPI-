@@ -52,4 +52,9 @@ public class OperatorServiceBean implements OperatorService {
 	public Iterable<Operator> getAll() {
 		return operatorRepository.findBySupprime(false);
 	}
+
+	@Override
+	public Iterable<Operator> findByCountry(String country) {
+		return operatorRepository.findByCountry(country);
+	}
 }

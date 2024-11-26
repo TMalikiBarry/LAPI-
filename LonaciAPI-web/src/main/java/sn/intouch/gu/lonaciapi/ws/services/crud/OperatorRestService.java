@@ -33,17 +33,6 @@ public class OperatorRestService {
                 .build(), HttpStatus.NOT_FOUND);
     }
 
-    @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<APIResponse> getOperators() {
-        Iterable<Operator> operators = operatorService.getAll();
-
-        return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
-                        .code(200)
-                        .reason("SUCCESS")
-                        .data(operatorsToList(operators))
-                .build());
-    }
-
     private List<OperatorDTO> operatorsToList(Iterable<Operator> operators) {
         if (operators == null)
             return null;
@@ -104,6 +93,21 @@ public class OperatorRestService {
                 .build());
     }
 
+    @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
+    public ResponseEntity<APIResponse> getOperatorByCountry(@RequestParam String country){
+        Iterable<Operator> operators;
+        if(country == null){
+            operators = operatorService.getAll();
+        }else {
+            operators = operatorService.findByCountry(country);
+        }
+        return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
+                .code(200)
+                .reason("SUCCESS")
+                .data(operatorsToList(operators)).build()
+        );
+    }
+
     private void transposeUpdate(Operator operator, OperatorDTO dto) {
         if (dto.getIdentifier() != null) operator.setOperatorId(dto.getIdentifier());
         if (dto.getLabel() != null) operator.setOperatorLabel(dto.getLabel());
@@ -111,5 +115,6 @@ public class OperatorRestService {
         if (dto.getMerchantCode() != null) operator.setMerchantCode(dto.getMerchantCode());
         if (dto.getNetworkCode() != null) operator.setNetworkCode(dto.getNetworkCode());
         if (dto.getStatus() != null) operator.setStatut(dto.getStatus());
+        if (dto.getCountry() != null ) operator.setCountry(dto.getCountry());
     }
 }

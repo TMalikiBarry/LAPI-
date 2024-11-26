@@ -47,6 +47,8 @@ public class Operator implements Serializable {
 	@Column(name = "date_modification")
 	private Date modificationDate;
 	private String statut;
+	@Column(name = "country")
+	private String country;
 
 	private String country;
 

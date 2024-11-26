@@ -13,4 +13,5 @@ public interface OperatorService {
 	Operator delete(Operator operator);
 
 	Iterable<Operator> getAll();
+	Iterable<Operator> findByCountry(String country);
 }
