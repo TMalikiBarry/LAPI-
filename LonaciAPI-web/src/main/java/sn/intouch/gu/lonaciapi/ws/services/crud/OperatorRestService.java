@@ -95,26 +95,17 @@ public class OperatorRestService {
 
     @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> getOperatorByCountry(@RequestParam String country){
+        Iterable<Operator> operators;
         if(country == null){
-            Iterable<Operator> operators = operatorService.getAll();
-            return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
-                    .code(200)
-                    .reason("SUCCESS")
-                    .data(operatorsToList(operators)).build()
-            );
+            operators = operatorService.getAll();
+        }else {
+            operators = operatorService.findByCountry(country);
         }
-        Operator operator = operatorService.findByCountry(country);
-        if(operator == null)
-            return new ResponseEntity<>(APIResponse.<OperatorDTO>builder()
-                    .code(404)
-                    .reason("Operator not found")
-                    .build(), HttpStatus.NOT_FOUND);
-
-        return ResponseEntity.ok(APIResponse.<OperatorDTO>builder()
-                    .code(200)
-                    .reason("SUCCESS")
-                    .data(operator.toDTO())
-                .build());
+        return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
+                .code(200)
+                .reason("SUCCESS")
+                .data(operatorsToList(operators)).build()
+        );
     }
 
     private void transposeUpdate(Operator operator, OperatorDTO dto) {

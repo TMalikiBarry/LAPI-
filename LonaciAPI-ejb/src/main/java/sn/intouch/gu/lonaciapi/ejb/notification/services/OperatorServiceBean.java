@@ -54,7 +54,7 @@ public class OperatorServiceBean implements OperatorService {
 	}
 
 	@Override
-	public Operator findByCountry(String country) {
-		return operatorRepository.findByCountry(country).orElseGet(() -> null);
+	public Iterable<Operator> findByCountry(String country) {
+		return operatorRepository.findByCountry(country);
 	}
 }
