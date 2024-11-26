@@ -32,7 +32,8 @@ public class AggregationReportingRestServiceV2 {
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "category", required = false) String category
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
@@ -55,7 +56,8 @@ public class AggregationReportingRestServiceV2 {
     @RequestMapping(value = {"/api/v2/aggregation/header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<CategorisationResponse<TimedResponse<Map<String, String>>>>> header(
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         
         CategorisationResponse<TimedResponse<Map<String, String>>> response = CategorisationResponse.<TimedResponse<Map<String, String>>>builder()
@@ -81,7 +83,8 @@ public class AggregationReportingRestServiceV2 {
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
@@ -128,7 +131,8 @@ public class AggregationReportingRestServiceV2 {
     @RequestMapping(value = {"/api/v2/aggregation/trend"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<CategorisationResponse<TimedResponse<List<Map<String, String>>>>>> trend(
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         CategorisationResponse<TimedResponse<List<Map<String, String>>>> response = CategorisationResponse.<TimedResponse<List<Map<String, String>>>>builder()
                 .payin(getTrendResponse(operator, type, "PAY_IN"))
@@ -166,7 +170,8 @@ public class AggregationReportingRestServiceV2 {
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "category", required = false) String category
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate;
         Date endDate;

@@ -34,7 +34,8 @@ public class NotificationReportingRestService {
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "country") String country
 
     ) throws RuntimeException {
         Date startDate;

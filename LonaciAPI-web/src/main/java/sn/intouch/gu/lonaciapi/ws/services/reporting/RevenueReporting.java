@@ -13,7 +13,9 @@ import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.dto.RevenueDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.schedules.ComputeRevenueSchedule;
 import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
@@ -31,12 +33,14 @@ import java.util.List;
 public class RevenueReporting {
 
     private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
+    private final OperatorService operatorService = (OperatorService) JNDIUtils.lookUpEJB(EJBRegistry.OperatorServiceBean);
 
     @RequestMapping(value = {"/api/v1/aggregation/revenue", "/api/v2/aggregation/revenue"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<RevenueResponse>> revenue(
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
-            @RequestParam(value = "operator", required = false) String operator
+            @RequestParam(value = "operator", required = false) String operator,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
@@ -51,7 +55,7 @@ public class RevenueReporting {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Object[]> dayRevenue = revenueService.sumByDateAndOperator(startDate, endDate, operator);
+        List<Object[]> dayRevenue = revenueService.sumByDateAndOperator(startDate, endDate, operator, country);
         if (dayRevenue == null || dayRevenue.isEmpty()) {
             return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", new RevenueResponse()));
         }
@@ -76,20 +80,21 @@ public class RevenueReporting {
 
     @RequestMapping(value = {"/api/v2/aggregation/revenue-timed"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<RevenueReformattedResponse>> revenueTimed(
-            @RequestParam(value = "operator", required = false) String operator
+            @RequestParam(value = "operator", required = false) String operator,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate, endDate;
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
         endDate = DateUtil.getEndOfDay();
 
-        RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
+        RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country), startDate, endDate);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
-        RevenueResponse weekResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
+        RevenueResponse weekResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country), startDate, endDate);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
-        RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator), startDate, endDate);
+        RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country), startDate, endDate);
 
         RevenueReformattedResponse reformattedResponse = RevenueReformattedResponse.builder()
                 .grossGamingProduct(
@@ -188,7 +193,8 @@ public class RevenueReporting {
     public ResponseEntity<APIResponse<List<RevenueDTO>>> revenueCurve(
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
-            @RequestParam(value = "operator", required = false) String operator
+            @RequestParam(value = "operator", required = false) String operator,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
@@ -202,7 +208,7 @@ public class RevenueReporting {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        List<Revenue> revenues = revenueService.curveByDateAndOperator(startDate, endDate, operator);
+        List<Revenue> revenues = revenueService.curveByDateAndOperator(startDate, endDate, operator, country);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", Revenue.toDTOs(revenues)));
     }
@@ -233,11 +239,15 @@ public class RevenueReporting {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        log.info("Start Date :: " + startDate);
-        log.info("End Date :: " + endDate);
-        if (operateur != null)
-            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operateur);
-        else
+        log.info("Start Date :: {}", startDate);
+        log.info("End Date :: {}", endDate);
+        if (operateur != null) {
+            Operator operatorEntity = operatorService.findByOperatorID(operateur);
+            if (operatorEntity == null)
+                return ResponseEntity.ok(new APIResponse<>(404, "Operator not found", ""));
+
+            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operatorEntity);
+        }else
             new ComputeRevenueSchedule().compute(startDate, endDate);
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", ""));
     }

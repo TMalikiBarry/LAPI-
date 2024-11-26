@@ -47,20 +47,21 @@ public class ComputeRevenueSchedule {
         log.info("Running JOB for computing revenue at : START DATE " + startDate + " AND END DATE : " + endDate);
         Iterable<Operator> operators = operatorService.getAll();
         for (Operator operator : operators) {
-            computeForOperator(startDate, endDate, operator.getOperatorId());
+            computeForOperator(startDate, endDate, operator);
         }
     }
 
-    public void computeForOperator(Date startDate, Date endDate, String operator) {
+    public void computeForOperator(Date startDate, Date endDate, Operator operator) {
 
         try {
             Revenue revenueEntity = Revenue.builder()
                     .date(startDate)
                     .endDate(endDate)
-                    .operator(operator)
+                    .operator(operator.getOperatorId())
+                    .country(operator.getCountry())
                     .build();
             revenueEntity = revenueService.update(revenueEntity);
-            Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator, null, Boolean.TRUE);
+            Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator.getOperatorId(), null, Boolean.TRUE);
             log.info("Revenue Computed :: " + new Gson().toJson(values));
             Double misesOverallVolume = Double.valueOf(values.get("mises"));
             Double gainsOverallVolume = Double.valueOf(values.get("gain"));

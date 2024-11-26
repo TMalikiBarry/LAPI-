@@ -46,24 +46,28 @@ public class RevenueServiceBean implements RevenueService {
     }
 
     @Override
-    public List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator) {
+    public List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator, String country) {
         String sql = "SELECT SUM(grossGamingProduct), SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), " +
                 " SUM(payout), SUM(mises), SUM(gain), SUM(bonus) FROM revenue WHERE date BETWEEN :startDate AND :endDate ";
 
         if (operator != null)
             sql += " AND operator = :operator";
+        if (country != null)
+            sql += " AND country = :country";
 
         Query query = em.createNativeQuery(sql)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate);
         if (operator != null)
             query.setParameter("operator", operator);
+        if (country != null)
+            query.setParameter("country", country);
 
         return query.getResultList();
     }
 
     @Override
-    public List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator) {
+    public List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator, String country) {
         String sql = "SELECT new sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue(DATE(date), SUM(grossGamingProduct), " +
                 "SUM(integratorRemuneration), SUM(revenue), SUM(royalties), SUM(payin), SUM(payout), SUM(mises), SUM(gain), SUM(bonus))" +
                 " FROM Revenue WHERE date BETWEEN :startDate AND :endDate ";

@@ -48,6 +48,8 @@ public class Operator implements Serializable {
 	private Date modificationDate;
 	private String statut;
 
+	private String country;
+
 	@PreUpdate
 	private void updatedDate() {
 		this.modificationDate = new Date();

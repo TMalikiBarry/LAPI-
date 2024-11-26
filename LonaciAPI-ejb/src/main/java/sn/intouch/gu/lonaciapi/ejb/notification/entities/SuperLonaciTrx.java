@@ -52,6 +52,8 @@ public class SuperLonaciTrx implements Serializable {
     @Column(unique = true)
     private String lonaciTransactionID;
 
+	private String country;
+
 	public static SuperLonaciTrx buildTrxFromNotification(LonaciNotification notification) {
 		SuperLonaciTrx lonaciTrx = new SuperLonaciTrx();
 		lonaciTrx.setOperateurID(notification.getOperateurID());

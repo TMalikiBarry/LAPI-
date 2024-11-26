@@ -15,7 +15,7 @@ public interface RevenueService {
 
 	Iterable<Revenue> findByDateAndOperator(Date start, Date end, String operator);
 
-	List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator);
+	List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator, String country);
 
-    List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator);
+    List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator, String country);
 }

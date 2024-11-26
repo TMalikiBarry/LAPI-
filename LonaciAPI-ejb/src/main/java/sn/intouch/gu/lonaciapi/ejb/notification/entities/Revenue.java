@@ -39,6 +39,7 @@ public class Revenue implements Serializable {
 	private Double mises;
 	private Double gain;
 	private Double bonus;
+	private String country;
 
 	public Revenue(Date date, Double grossGamingProduct, Double integratorRemuneration, Double revenue, Double royalties, Double payin, Double payout, Double mises, Double gain, Double bonus) {
 		this.date = date;

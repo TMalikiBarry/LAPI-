@@ -1,8 +1,8 @@
 {
-  "realm": "sso-intouch",
+  "realm": "sso-intouch-iacc",
   "bearer-only": true,
-  "auth-server-url": "https://dev-sso.gutouch.net/auth/",
-  "ssl-required": "external",
-  "resource": "lona-api",
+  "auth-server-url": "https://intouchgu2-qlf.worldline-solutions.com/auth",
+  "ssl-required": "none",
+  "resource": "lonaci-api",
   "confidential-port": 0
 }

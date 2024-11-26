@@ -28,7 +28,8 @@ public class AggregationReportingRestService {
     @RequestMapping(value = {"/api/v1/aggregation/header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<HeaderResponse>> header(
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
@@ -45,7 +46,8 @@ public class AggregationReportingRestService {
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
-            @RequestParam(value = "type", required = false) String type
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "country") String country
     ) throws RuntimeException {
         Date startDate;
         Date endDate;
