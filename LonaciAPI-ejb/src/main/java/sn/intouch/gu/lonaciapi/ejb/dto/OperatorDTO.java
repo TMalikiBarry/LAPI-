@@ -20,6 +20,7 @@ public class OperatorDTO implements Serializable {
     private String networkCode;
     private Long creationDate, modificationDate;
     private String status;
+    private String country;
 
     public Operator fromDTO() {
         return Operator.builder()
@@ -29,6 +30,7 @@ public class OperatorDTO implements Serializable {
                 .merchantCode(merchantCode)
                 .networkCode(networkCode)
                 .statut(status)
+                .country(country)
                 .build();
     }
 }

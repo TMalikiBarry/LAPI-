@@ -33,17 +33,6 @@ public class OperatorRestService {
                 .build(), HttpStatus.NOT_FOUND);
     }
 
-    @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<APIResponse> getOperators() {
-        Iterable<Operator> operators = operatorService.getAll();
-
-        return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
-                        .code(200)
-                        .reason("SUCCESS")
-                        .data(operatorsToList(operators))
-                .build());
-    }
-
     private List<OperatorDTO> operatorsToList(Iterable<Operator> operators) {
         if (operators == null)
             return null;
@@ -104,6 +93,30 @@ public class OperatorRestService {
                 .build());
     }
 
+    @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
+    public ResponseEntity<APIResponse> getOperatorByCountry(@RequestParam String country){
+        if(country == null){
+            Iterable<Operator> operators = operatorService.getAll();
+            return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
+                    .code(200)
+                    .reason("SUCCESS")
+                    .data(operatorsToList(operators)).build()
+            );
+        }
+        Operator operator = operatorService.findByCountry(country);
+        if(operator == null)
+            return new ResponseEntity<>(APIResponse.<OperatorDTO>builder()
+                    .code(404)
+                    .reason("Operator not found")
+                    .build(), HttpStatus.NOT_FOUND);
+
+        return ResponseEntity.ok(APIResponse.<OperatorDTO>builder()
+                    .code(200)
+                    .reason("SUCCESS")
+                    .data(operator.toDTO())
+                .build());
+    }
+
     private void transposeUpdate(Operator operator, OperatorDTO dto) {
         if (dto.getIdentifier() != null) operator.setOperatorId(dto.getIdentifier());
         if (dto.getLabel() != null) operator.setOperatorLabel(dto.getLabel());
@@ -111,5 +124,6 @@ public class OperatorRestService {
         if (dto.getMerchantCode() != null) operator.setMerchantCode(dto.getMerchantCode());
         if (dto.getNetworkCode() != null) operator.setNetworkCode(dto.getNetworkCode());
         if (dto.getStatus() != null) operator.setStatut(dto.getStatus());
+        if (dto.getCountry() != null ) operator.setCountry(dto.getCountry());
     }
 }

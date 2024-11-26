@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface OperatorRepository extends JpaRepository<Operator, Long>, QueryByExampleExecutor<Operator> {
     Optional<Operator> findByOperatorIdAndSupprime(String operatorID, Boolean deleted);
     Iterable<Operator> findBySupprime(Boolean deleted);
+    Optional<Operator> findByCountry(String country);
 }
