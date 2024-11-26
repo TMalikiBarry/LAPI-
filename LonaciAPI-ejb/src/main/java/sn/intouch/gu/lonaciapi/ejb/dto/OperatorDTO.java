@@ -1,9 +1,6 @@
 package sn.intouch.gu.lonaciapi.ejb.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 
 import java.io.Serializable;

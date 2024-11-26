@@ -69,6 +69,7 @@ public class Operator implements Serializable {
 				.merchantCode(merchantCode)
 				.networkCode(networkCode)
 				.status(statut)
+				.country(country)
 				.creationDate(creationDate != null ? creationDate.getTime() : 0)
 				.modificationDate(modificationDate != null ? modificationDate.getTime() : 0)
 				.build();
