@@ -51,6 +51,12 @@ public class OperatorRestService {
                     .build(), HttpStatus.CREATED);
         }
         operator = dto.fromDTO();
+        if(operator.getCountry() == null)
+            return new ResponseEntity<>(APIResponse.<OperatorDTO>builder()
+                    .code(400)
+                    .reason("Country is null.")
+                    .build(), HttpStatus.BAD_REQUEST);
+
         operator = operatorService.save(operator);
         return ResponseEntity.ok(APIResponse.<OperatorDTO>builder()
                         .code(200)
@@ -94,7 +100,7 @@ public class OperatorRestService {
     }
 
     @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public ResponseEntity<APIResponse> getOperatorByCountry(@RequestParam String country){
+    public ResponseEntity<APIResponse> getOperatorByCountry(@RequestParam(required = false) String country){
         Iterable<Operator> operators;
         if(country == null){
             operators = operatorService.getAll();
