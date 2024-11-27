@@ -61,7 +61,7 @@ public class ComputeRevenueSchedule {
                     .country(operator.getCountry())
                     .build();
             revenueEntity = revenueService.update(revenueEntity);
-            Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator.getOperatorId(), null, Boolean.TRUE);
+            Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator.getOperatorId(), null, Boolean.TRUE, country);
             log.info("Revenue Computed :: " + new Gson().toJson(values));
             Double misesOverallVolume = Double.valueOf(values.get("mises"));
             Double gainsOverallVolume = Double.valueOf(values.get("gain"));

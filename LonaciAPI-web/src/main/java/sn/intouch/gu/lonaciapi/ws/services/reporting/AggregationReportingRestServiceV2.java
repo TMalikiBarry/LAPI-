@@ -48,7 +48,8 @@ public class AggregationReportingRestServiceV2 {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, AggregationTimeEnum.MONTH, operator, type, true, null, category);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate,
+                AggregationTimeEnum.MONTH, operator, type, true, null, category, country);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
@@ -61,20 +62,23 @@ public class AggregationReportingRestServiceV2 {
     ) throws RuntimeException {
         
         CategorisationResponse<TimedResponse<Map<String, String>>> response = CategorisationResponse.<TimedResponse<Map<String, String>>>builder()
-                .payin(getHeaderResponse(operator, type, "PAY_IN"))
-                .payout(getHeaderResponse(operator, type, "PAY_OUT"))
-                .bonus(getHeaderResponse(operator, type, "BONUS"))
-                .mises(getHeaderResponse(operator, type, "MISES"))
-                .gain(getHeaderResponse(operator, type, "GAIN"))
+                .payin(getHeaderResponse(operator, type, "PAY_IN", country))
+                .payout(getHeaderResponse(operator, type, "PAY_OUT", country))
+                .bonus(getHeaderResponse(operator, type, "BONUS", country))
+                .mises(getHeaderResponse(operator, type, "MISES", country))
+                .gain(getHeaderResponse(operator, type, "GAIN", country))
                 .build();
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
     }
 
-    private TimedResponse<Map<String, String>> getHeaderResponse(String operator, String type, String category) {
+    private TimedResponse<Map<String, String>> getHeaderResponse(String operator, String type, String category, String country) {
         return TimedResponse.<Map<String, String>>builder()
-                .day(bigQueryService.getSumBetweenDatesV2(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), operator, type, null, category))
-                .week(bigQueryService.getSumBetweenDatesV2(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), operator, type, null, category))
-                .month(bigQueryService.getSumBetweenDatesV2(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), operator, type, null, category))
+                .day(bigQueryService.getSumBetweenDatesV2(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY),
+                        DateUtil.getEndOfDay(), operator, type, null, category, country))
+                .week(bigQueryService.getSumBetweenDatesV2(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK),
+                        DateUtil.getEndOfDay(), operator, type, null, category, country))
+                .month(bigQueryService.getSumBetweenDatesV2(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH),
+                        DateUtil.getEndOfDay(), operator, type, null, category, country))
                 .build();
     }
 
@@ -98,8 +102,9 @@ public class AggregationReportingRestServiceV2 {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, null);
-        Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator, null, null);
+        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, null, country);
+        Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator,
+                null, null, country);
         values.put("activeClients", activeClients + "");
         log.info("Flatten DATA :: " + values);
         CategorisationResponse<SubHeaderResponse> response = CategorisationResponse.<SubHeaderResponse>builder()
@@ -135,22 +140,25 @@ public class AggregationReportingRestServiceV2 {
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
         CategorisationResponse<TimedResponse<List<Map<String, String>>>> response = CategorisationResponse.<TimedResponse<List<Map<String, String>>>>builder()
-                .payin(getTrendResponse(operator, type, "PAY_IN"))
-                .payout(getTrendResponse(operator, type, "PAY_OUT"))
-                .bonus(getTrendResponse(operator, type, "BONUS"))
-                .mises(getTrendResponse(operator, type, "MISES"))
-                .gain(getTrendResponse(operator, type, "GAIN"))
+                .payin(getTrendResponse(operator, type, "PAY_IN", country))
+                .payout(getTrendResponse(operator, type, "PAY_OUT", country))
+                .bonus(getTrendResponse(operator, type, "BONUS", country))
+                .mises(getTrendResponse(operator, type, "MISES", country))
+                .gain(getTrendResponse(operator, type, "GAIN", country))
                 .build();
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 response
         ));
     }
 
-    private TimedResponse<List<Map<String, String>>> getTrendResponse(String operator, String type, String category) {
+    private TimedResponse<List<Map<String, String>>> getTrendResponse(String operator, String type, String category, String country) {
         return TimedResponse.<List<Map<String, String>>>builder()
-                .day(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), AggregationTimeEnum.DAY, operator, type, false, null, category))
-                .week(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), AggregationTimeEnum.WEEK, operator, type, false, null, category))
-                .month(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), AggregationTimeEnum.MONTH, operator, type, false, null, category))
+                .day(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY),
+                        DateUtil.getEndOfDay(), AggregationTimeEnum.DAY, operator, type, false, null, category, country))
+                .week(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK),
+                        DateUtil.getEndOfDay(), AggregationTimeEnum.WEEK, operator, type, false, null, category, country))
+                .month(bigQueryService.getAggregation(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH),
+                        DateUtil.getEndOfDay(), AggregationTimeEnum.MONTH, operator, type, false, null, category, country))
                 .build();
     }
 
@@ -196,7 +204,8 @@ public class AggregationReportingRestServiceV2 {
         else
             timeEnum = AggregationTimeEnum.YEAR;
 
-        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, timeEnum, operator, type, true, null, category);
+        List<Map<String, String>> notifications = bigQueryService.getAggregation(startDate, endDate, timeEnum, operator,
+                type, true, null, category, country);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }

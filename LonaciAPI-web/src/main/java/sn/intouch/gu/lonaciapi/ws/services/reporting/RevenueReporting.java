@@ -88,13 +88,16 @@ public class RevenueReporting {
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
         endDate = DateUtil.getEndOfDay();
 
-        RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country), startDate, endDate);
+        RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
+                startDate, endDate);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
-        RevenueResponse weekResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country), startDate, endDate);
+        RevenueResponse weekResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
+                startDate, endDate);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
-        RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country), startDate, endDate);
+        RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
+                startDate, endDate);
 
         RevenueReformattedResponse reformattedResponse = RevenueReformattedResponse.builder()
                 .grossGamingProduct(

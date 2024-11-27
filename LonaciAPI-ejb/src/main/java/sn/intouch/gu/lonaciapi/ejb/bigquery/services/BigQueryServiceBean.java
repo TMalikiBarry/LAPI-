@@ -18,7 +18,7 @@ public class BigQueryServiceBean implements BigQueryService{
 
     @Override
     public List<Map<String, String>> getAggregation(Date startDate, Date endDate, AggregationTimeEnum time, String operator, String type, boolean formatDateGrouper,
-                                                    Boolean computeVolume, String category) {
+                                                    Boolean computeVolume, String category, String country) {
         BigQueryConnection connection = new BigQueryConnection();
         System.out.println("START DATE :: " + startDate + " END DATE :: " + endDate);
         try {
@@ -30,10 +30,13 @@ public class BigQueryServiceBean implements BigQueryService{
                 query += " AND trx.operateur_id = @operator";
             if (type != null)
                 query += " AND trx.type_transaction = @type";
+            if (country != null)
+                query += " AND trx.country = @country ";
             if (computeVolume != null)
                 query += " AND type.use_to_compute_volume = @computeVolume";
             if (category != null)
                 query += " AND type.category = @category ";
+
             query += " GROUP BY ddate ORDER BY ddate ASC;";
 
             QueryJobConfiguration.Builder queryConfig = QueryJobConfiguration.newBuilder(query);
@@ -43,6 +46,8 @@ public class BigQueryServiceBean implements BigQueryService{
             }
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (country != null)
+                queryConfig.addNamedParameter("country", QueryParameterValue.string(country));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
             if (computeVolume != null)
@@ -76,13 +81,15 @@ public class BigQueryServiceBean implements BigQueryService{
 
     @Override
     @Deprecated
-    public Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operator, String type) {
+    public Map<String, String> getSumBetweenDates(Date startDate, Date endDate, String operator, String type, String country) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
             String query = "SELECT COUNT(*) as number, SUM(trx.montant) as sum FROM "+ connection.getLonaciTableRef() +" trx "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
+            if (country != null)
+                query += " AND country = @country";
             if (type != null)
                 query += " AND type_transaction = @type";
 
@@ -92,6 +99,8 @@ public class BigQueryServiceBean implements BigQueryService{
 
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (country != null)
+                queryConfig.addNamedParameter("country", QueryParameterValue.string(country));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
 
@@ -117,7 +126,7 @@ public class BigQueryServiceBean implements BigQueryService{
     }
     @Override
     public Map<String, String> getSumBetweenDatesV2(Date startDate, Date endDate, String operator, String type,
-                                                    Boolean computeVolume, String category) {
+                                                    Boolean computeVolume, String category, String country) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
             String query = "SELECT COUNT(*) as number, SUM( CASE WHEN type.direction = 'DEBIT' then - trx.montant ELSE trx.montant END ) as sum " +
@@ -125,6 +134,8 @@ public class BigQueryServiceBean implements BigQueryService{
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
+            if (country != null)
+                query += " AND country = @country";
             if (type != null)
                 query += " AND type_transaction = @type";
             if (computeVolume != null)
@@ -138,6 +149,8 @@ public class BigQueryServiceBean implements BigQueryService{
 
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (country != null)
+                queryConfig.addNamedParameter("country", QueryParameterValue.string(country));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
             if (computeVolume != null)
@@ -165,7 +178,7 @@ public class BigQueryServiceBean implements BigQueryService{
     }
     @Override
     public Map<String, String> getSumBetweenDatesAllCategories(Date startDate, Date endDate, String operator, String type,
-                                                               Boolean computeVolume) {
+                                                               Boolean computeVolume, String country) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
             String query = "SELECT  " +
@@ -249,6 +262,8 @@ public class BigQueryServiceBean implements BigQueryService{
 
             if (type != null)
                 query += " AND trx.type_transaction = @type";
+            if (country != null)
+                query += " AND trx.country = @country";
             if (computeVolume != null)
                 query += " AND type.use_to_compute = @use_to_compute";
             if (operator != null) {
@@ -268,6 +283,8 @@ public class BigQueryServiceBean implements BigQueryService{
 
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (country != null)
+                queryConfig.addNamedParameter("country", QueryParameterValue.string(country));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
             if (computeVolume != null)
@@ -293,13 +310,15 @@ public class BigQueryServiceBean implements BigQueryService{
     }
 
     @Override
-    public Integer getActiveClients(Date startDate, Date endDate, String operator, String type) {
+    public Integer getActiveClients(Date startDate, Date endDate, String operator, String type, String country) {
         try {
             BigQueryConnection connection = new BigQueryConnection();
             String query = "SELECT COUNT(DISTINCT destinataire) as number FROM "+ connection.getLonaciTableRef() +" trx "
                     + " WHERE trx.date BETWEEN @startDate AND @endDate ";
             if (operator != null)
                 query += " AND operateur_id = @operator";
+            if (country != null)
+                query += " AND country = @country";
             if (type != null)
                 query += " AND type_transaction = @type";
 
@@ -309,6 +328,8 @@ public class BigQueryServiceBean implements BigQueryService{
 
             if (operator != null)
                 queryConfig.addNamedParameter("operator", QueryParameterValue.string(operator));
+            if (country != null)
+                queryConfig.addNamedParameter("country", QueryParameterValue.string(country));
             if (type != null)
                 queryConfig.addNamedParameter("type", QueryParameterValue.string(type));
 

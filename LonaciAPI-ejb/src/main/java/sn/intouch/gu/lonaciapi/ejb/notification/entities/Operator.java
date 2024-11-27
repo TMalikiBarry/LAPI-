@@ -50,8 +50,6 @@ public class Operator implements Serializable {
 	@Column(name = "country")
 	private String country;
 
-	private String country;
-
 	@PreUpdate
 	private void updatedDate() {
 		this.modificationDate = new Date();

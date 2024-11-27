@@ -20,13 +20,6 @@ public class RevenueServiceBean implements RevenueService {
     @PersistenceContext(unitName = "lonaciPU")
     EntityManager em;
 
-    private RevenueRepository revenueRepository;
-    @PostConstruct
-    private void init() {
-        RepositoryFactorySupport factorySupport = new JpaRepositoryFactory(em);
-        this.revenueRepository = factorySupport.getRepository(RevenueRepository.class);
-    }
-
     @Override
     public void add(Revenue revenue) {
         em.persist(revenue);
@@ -37,13 +30,6 @@ public class RevenueServiceBean implements RevenueService {
         return em.merge(revenue);
     }
 
-    @Override
-    public Iterable<Revenue> findByDateAndOperator(Date start, Date end, String operator) {
-        if (operator != null)
-            return revenueRepository.findByDateBetweenAndOperatorOrderByDateAsc(start, end, operator);
-
-        return revenueRepository.findByDateBetween(start, end);
-    }
 
     @Override
     public List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator, String country) {
@@ -73,12 +59,17 @@ public class RevenueServiceBean implements RevenueService {
                 " FROM Revenue WHERE date BETWEEN :startDate AND :endDate ";
         if (operator != null)
             sql += " AND operator = :operator";
+        if (country != null)
+            sql += " AND country = :country";
+
         sql += " GROUP BY DATE(date) ORDER BY DATE(date) ASC";
         Query query = em.createQuery(sql, Revenue.class)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate);
         if (operator != null)
             query.setParameter("operator", operator);
+        if (country != null)
+            query.setParameter("country", country);
 
         return query.getResultList();
     }

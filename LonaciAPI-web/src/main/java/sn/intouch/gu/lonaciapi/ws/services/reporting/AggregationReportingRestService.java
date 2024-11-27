@@ -34,9 +34,9 @@ public class AggregationReportingRestService {
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 HeaderResponse.builder()
-                        .day(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), operator, type))
-                        .week(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), operator, type))
-                        .month(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), operator, type))
+                        .day(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), operator, type, country))
+                        .week(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK), DateUtil.getEndOfDay(), operator, type, country))
+                        .month(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH), DateUtil.getEndOfDay(), operator, type, country))
                         .build()
         ));
     }
@@ -61,8 +61,8 @@ public class AggregationReportingRestService {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        Map<String, String> sumBetweenDates = bigQueryService.getSumBetweenDatesV2(startDate, endDate, operator, type, null, null);
-        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, type);
+        Map<String, String> sumBetweenDates = bigQueryService.getSumBetweenDatesV2(startDate, endDate, operator, type, null, null, country);
+        Integer activeClients = bigQueryService.getActiveClients(startDate, endDate, operator, type, country);
         Long operationsNumber = Long.valueOf(sumBetweenDates.get("number"));
         Double overallVolume = Double.valueOf(sumBetweenDates.get("sum"));
 

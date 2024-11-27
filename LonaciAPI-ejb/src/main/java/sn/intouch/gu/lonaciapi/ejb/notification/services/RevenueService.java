@@ -8,12 +8,10 @@ import java.util.List;
 
 @Local
 public interface RevenueService {
-	
+
 	void add(Revenue typeTrx);
 
 	Revenue update(Revenue revenue);
-
-	Iterable<Revenue> findByDateAndOperator(Date start, Date end, String operator);
 
 	List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator, String country);
 

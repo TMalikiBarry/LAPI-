@@ -74,7 +74,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	}
 
 	@Override
-	public PaginationResponse<List<LonaciTrx>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(Date startDate, Date endDate, String operatorId, String typeTransaction, String sortBy, String sortDir, int pageSize, int page) {
+	public PaginationResponse<List<LonaciTrx>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(String country, Date startDate, Date endDate, String operatorId, String typeTransaction, String sortBy, String sortDir, int pageSize, int page) {
 		String sqlQuery = "SELECT t FROM LonaciTrx t WHERE t.date BETWEEN :startDate AND :endDate ";
 		String aggSqlQuery = "SELECT COUNT(*), sum(t.montant) from lonaci_trx t WHERE t.date BETWEEN :startDate AND :endDate ";
 		if (operatorId != null) {
@@ -84,6 +84,10 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		if (typeTransaction != null) {
 			sqlQuery += " AND t.typeTransaction = :typeTransaction";
 			aggSqlQuery += " AND t.type_transaction = :typeTransaction";
+		}
+		if (country != null) {
+			sqlQuery += " AND t.country = :country";
+			aggSqlQuery += " AND t.country = :country";
 		}
 		if (sortBy != null && sortDir != null) {
 			sqlQuery += " ORDER BY " + " " + sortBy + " " + sortDir;
@@ -102,6 +106,10 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		if (typeTransaction != null) {
 			query.setParameter("typeTransaction", typeTransaction);
 			aggQuery.setParameter("typeTransaction", typeTransaction);
+		}
+		if (country != null) {
+			query.setParameter("country", country);
+			aggQuery.setParameter("country", country);
 		}
 		List<Object[]> aggResult = aggQuery.getResultList();
 		if (page != -1) {

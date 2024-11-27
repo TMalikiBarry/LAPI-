@@ -51,7 +51,7 @@ public class NotificationReportingRestService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(startDate, endDate, operator, type, sortBy, sortDir, size, page);
+        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(country, startDate, endDate, operator, type, sortBy, sortDir, size, page);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }

@@ -20,6 +20,6 @@ public interface LonaciTrxService {
 
 	// Page<LonaciTrx> findByExample(Example<LonaciTrx> example, Pageable pageable);
 
-	PaginationResponse customFindByDateBetweenAndOperateurIDAndTypeTransaction(Date startDate, Date endDate, String operatorId, String type, String sortBy, String sortDir, int pageSize, int page);
+	PaginationResponse customFindByDateBetweenAndOperateurIDAndTypeTransaction(String country, Date startDate, Date endDate, String operatorId, String type, String sortBy, String sortDir, int pageSize, int page);
 
 }
