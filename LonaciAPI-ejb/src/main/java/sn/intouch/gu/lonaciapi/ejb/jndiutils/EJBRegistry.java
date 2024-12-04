@@ -1,6 +1,14 @@
 package sn.intouch.gu.lonaciapi.ejb.jndiutils;
 
 public enum EJBRegistry {
-	LonaciTrxServiceBean, TypeTrxServiceBean, LonaciTrxTempServiceBean, ParameterServiceBean, BigQueryServiceBean, CategoryTypeServiceBean, RevenueServiceBean, OperatorServiceBean
+	LonaciTrxServiceBean,
+	TypeTrxServiceBean,
+	LonaciTrxTempServiceBean,
+	ParameterServiceBean,
+	BigQueryServiceBean,
+	CategoryTypeServiceBean,
+	RevenueServiceBean,
+	OperatorServiceBean,
+	CountryServiceBean
 
 }
