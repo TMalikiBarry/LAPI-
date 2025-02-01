@@ -9,6 +9,6 @@ public enum EJBRegistry {
 	CategoryTypeServiceBean,
 	RevenueServiceBean,
 	OperatorServiceBean,
-	CountryServiceBean
+    ComputeParameterServiceBean, CountryServiceBean
 
 }

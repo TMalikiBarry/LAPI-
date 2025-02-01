@@ -9,6 +9,8 @@ import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
+import sn.intouch.gu.lonaciapi.ejb.parameter.entities.ComputeParameter;
+import sn.intouch.gu.lonaciapi.ejb.parameter.services.ComputeParameterService;
 
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
@@ -21,12 +23,16 @@ import java.util.Map;
 @Log4j2
 public class ComputeRevenueSchedule {
 
+    private static final String CI_COUNTRY_CODE = "CI";
+    private static final String BF_COUNTRY_CODE = "BF";
+
     private final OperatorService operatorService = (OperatorService) JNDIUtils
             .lookUpEJB(EJBRegistry.OperatorServiceBean);
     private final RevenueService revenueService = (RevenueService) JNDIUtils
             .lookUpEJB(EJBRegistry.RevenueServiceBean);
 
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
+    private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
 
     // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
     @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
@@ -63,16 +69,57 @@ public class ComputeRevenueSchedule {
             revenueEntity = revenueService.update(revenueEntity);
             Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator.getOperatorId(), null, Boolean.TRUE, operator.getCountry());
             log.info("Revenue Computed :: " + new Gson().toJson(values));
+            if (values == null || values.isEmpty()) {
+                log.warn("No revenue found for operator : " + operator.getOperatorId());
+                return;
+            }
             Double misesOverallVolume = Double.valueOf(values.get("mises"));
             Double gainsOverallVolume = Double.valueOf(values.get("gain"));
             Double bonusOverallVolume = Double.valueOf(values.get("bonus"));
             Double payinOverallVolume = Double.valueOf(values.get("payin"));
             Double payoutOverallVolume = Double.valueOf(values.get("payout"));
 
-            Double grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));
-            Double integratorRemuneration = 0.04 * Math.abs(payinOverallVolume) + 0.02 * Math.abs(payoutOverallVolume);
-            Double revenue = grossGamingProduct - Math.abs(integratorRemuneration);
-            Double royalties = 0.5 * revenue;
+            Double grossGamingProduct;
+            Double integratorRemuneration;
+            Double revenue;
+            Double royalties;
+
+            ComputeParameter computeParameter = computeParameterService.getParameterByOperator(operator.getOperatorId());
+            if (computeParameter == null) {
+                log.info("Computing default revenue for country : " + operator.getCountry());
+                if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
+                    grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));
+                    integratorRemuneration = 0.04 * Math.abs(payinOverallVolume) + 0.02 * Math.abs(payoutOverallVolume);
+                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                    royalties = 0.5 * revenue;
+                } else if (BF_COUNTRY_CODE.equals(operator.getCountry())) {
+                    log.warn("No revenue default computation for country : " + operator.getCountry());
+                    return;
+                } else {
+                    log.warn("Country " + operator.getCountry() + " is not supported for computing revenue.");
+                    return;
+                }
+            } else {
+                log.info("Computing revenue for operator : " + operator.getOperatorId());
+                if (BF_COUNTRY_CODE.equals(operator.getCountry())) {
+                    grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(payinOverallVolume)
+                            - computeParameter.getCashinRate() * Math.abs(payoutOverallVolume);;
+                    integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
+                            + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);
+                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                    royalties = computeParameter.getRoyaltyRate() * revenue;
+                    grossGamingProduct = 0D;
+                } else if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
+                    grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));;
+                    integratorRemuneration = computeParameter.getPaymentRate() * (computeParameter.getPaymentFees() * Math.abs(payinOverallVolume))
+                            + computeParameter.getCashinRate() * (computeParameter.getCashinFees() * Math.abs(payoutOverallVolume));
+                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                    royalties = computeParameter.getRoyaltyRate() * revenue;
+                } else {
+                    log.warn("Country {} is not supported for computing revenue for operator {}.", operator.getCountry(), operator.getOperatorId());
+                    return;
+                }
+            }
 
             revenueEntity.setGrossGamingProduct(grossGamingProduct);
             revenueEntity.setIntegratorRemuneration(integratorRemuneration);
