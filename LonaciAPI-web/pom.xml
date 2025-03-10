@@ -152,6 +152,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.30</version> <!-- Remplacez par la version la plus récente -->
             <scope>provided</scope>
         </dependency>
 

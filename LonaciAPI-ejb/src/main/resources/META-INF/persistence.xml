@@ -31,6 +31,7 @@
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.CategoryType</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.Country</class>
+        <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.models.LonaciNotification</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator</class>
         <class>sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter</class>

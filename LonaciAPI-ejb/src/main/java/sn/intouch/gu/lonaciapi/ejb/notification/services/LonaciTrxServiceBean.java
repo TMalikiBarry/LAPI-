@@ -1,20 +1,35 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
+import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.util.StringUtils;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
 import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
+import sn.intouch.gu.lonaciapi.ejb.notification.repositories.CodeServiceMOMORepository;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Stateless
 public class LonaciTrxServiceBean implements LonaciTrxService {
 
 	@PersistenceContext(unitName = "lonaciPU")
 	EntityManager em;
+
+	private CodeServiceMOMORepository codeServiceRepository;
+
+	@PostConstruct
+	private void init() {
+		RepositoryFactorySupport factorySupport = new JpaRepositoryFactory(em);
+		this.codeServiceRepository = factorySupport.getRepository(CodeServiceMOMORepository.class);
+	}
 
 	public LonaciTrx getTransactionById(Long id) {
 		LonaciTrx transaction = em.find(LonaciTrx.class, id);
@@ -74,14 +89,43 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	}
 
 	@Override
-	public PaginationResponse<List<LonaciTrx>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(String country, Date startDate, Date endDate, String operatorId, String typeTransaction, String sortBy, String sortDir, int pageSize, int page) {
+	public PaginationResponse<List<LonaciTrx>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(
+            String country, Date startDate, Date endDate, String operatorId, String typeTransaction, String codeService,
+			String operateurMomo, Double montant, String sortBy, String sortDir, int pageSize, int page
+	) {
 		String sqlQuery = "SELECT t FROM LonaciTrx t WHERE t.date BETWEEN :startDate AND :endDate ";
 		String aggSqlQuery = "SELECT COUNT(*), sum(t.montant) from lonaci_trx t WHERE t.date BETWEEN :startDate AND :endDate ";
-		if (operatorId != null) {
+
+		// Si le filtre opérateur est fourni, on recherche les codes services associés à cet opérateur
+		List<String> codeServicesForOperator = null;
+		if (StringUtils.hasText(operateurMomo)) {
+			List<CodeServiceMOMO> codeServiceList = codeServiceRepository.findByOperateurServiceMomo(operateurMomo);
+			if (!codeServiceList.isEmpty()) {
+				codeServicesForOperator = codeServiceList.stream()
+						.map(CodeServiceMOMO::getCodeServiceMomo)
+						.collect(Collectors.toList());
+				// Filtrer les transactions dont le codeService figure dans la liste trouvée
+				sqlQuery += " AND t.codeService IN :codeServices";
+				aggSqlQuery += " AND t.code_service IN (:codeServices)";
+			}
+		}
+
+		if (StringUtils.hasText(operatorId)) {
 			sqlQuery += " AND t.operateurID = :operatorId";
 			aggSqlQuery += " AND t.operateur_id = :operatorId";
 		}
-		if (typeTransaction != null) {
+
+		if (StringUtils.hasText(codeService)) {
+			sqlQuery += " AND t.codeService = :codeService";
+			aggSqlQuery += " AND t.code_service = :codeService";
+		}
+
+		if (montant != null && montant != 0D) {
+			sqlQuery += " AND t.montant = :montant";
+			aggSqlQuery += " AND t.montant = :montant";
+		}
+
+		if (StringUtils.hasText(typeTransaction )) {
 			sqlQuery += " AND t.typeTransaction = :typeTransaction";
 			aggSqlQuery += " AND t.type_transaction = :typeTransaction";
 		}
@@ -99,18 +143,35 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 				.setParameter("endDate", endDate);
 		aggQuery.setParameter("startDate", startDate)
 				.setParameter("endDate", endDate);
-		if (operatorId != null) {
+		if (StringUtils.hasText(operatorId)) {
 			query.setParameter("operatorId", operatorId);
 			aggQuery.setParameter("operatorId", operatorId);
 		}
-		if (typeTransaction != null) {
+		if (StringUtils.hasText(typeTransaction)) {
 			query.setParameter("typeTransaction", typeTransaction);
 			aggQuery.setParameter("typeTransaction", typeTransaction);
 		}
+
+		if (StringUtils.hasText(codeService)) {
+			query.setParameter("codeService", codeService);
+			aggQuery.setParameter("codeService", codeService);
+		}
+
+		if (montant != null && montant != 0D) {
+			query.setParameter("montant", montant);
+			aggQuery.setParameter("montant", montant);
+		}
+
+		if (codeServicesForOperator != null) {
+			query.setParameter("codeServices", codeServicesForOperator);
+			aggQuery.setParameter("codeServices", codeServicesForOperator);
+		}
+
 		if (country != null) {
 			query.setParameter("country", country);
 			aggQuery.setParameter("country", country);
 		}
+
 		List<Object[]> aggResult = aggQuery.getResultList();
 		if (page != -1) {
 			query.setFirstResult(page * pageSize);

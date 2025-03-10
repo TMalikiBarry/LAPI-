@@ -35,6 +35,9 @@ public class NotificationReportingRestService {
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "codeService", required = false) String codeService,
+            @RequestParam(value = "operateurMomo", required = false) String operateurMomo,
+            @RequestParam(value = "montant", required = false) Double montant,
             @RequestParam(value = "country") String country
 
     ) throws RuntimeException {
@@ -51,7 +54,8 @@ public class NotificationReportingRestService {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(country, startDate, endDate, operator, type, sortBy, sortDir, size, page);
+        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(
+                country, startDate, endDate, operator, type, codeService, operateurMomo, montant, sortBy, sortDir, size, page);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
