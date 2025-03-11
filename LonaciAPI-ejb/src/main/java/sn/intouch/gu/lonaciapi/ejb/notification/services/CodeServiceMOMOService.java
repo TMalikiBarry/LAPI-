@@ -18,13 +18,14 @@ public interface CodeServiceMOMOService {
 
     CodeServiceMOMO findById(Long id);
     List<CodeServiceMOMO> findAll();
-    Optional<CodeServiceMOMO> findByCodeServiceMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+
+    Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
     // Retrouve l'entité par son code unique
-    List<CodeServiceMOMO> findByCodeServiceMomo(String codeServiceMomo);
+    List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo);
 
     // Retrouve la liste de toutes les entités associées à un opérateur
     List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo);
 
     // Vérifie l'existence d'une association spécifique entre un code et un opérateur
-    boolean existsByCodeServiceMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+    boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
 }

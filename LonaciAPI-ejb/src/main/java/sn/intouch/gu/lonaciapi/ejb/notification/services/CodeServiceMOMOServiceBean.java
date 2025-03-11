@@ -5,7 +5,9 @@ import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import sn.intouch.gu.lonaciapi.config.*;
+import sn.intouch.gu.lonaciapi.config.BadRequestException;
+import sn.intouch.gu.lonaciapi.config.DuplicateEntryException;
+import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
 import sn.intouch.gu.lonaciapi.ejb.dto.SaveAllResponse;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO;
 import sn.intouch.gu.lonaciapi.ejb.notification.repositories.CodeServiceMOMORepository;
@@ -36,8 +38,8 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
 
     @Override
     public CodeServiceMOMO save(CodeServiceMOMO codeServiceMOMO) {
-        if (codeServiceMOMORepository.existsByCodeServiceMomoAndOperateurServiceMomo(
-                codeServiceMOMO.getCodeServiceMomo(),
+        if (codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(
+                codeServiceMOMO.getCodeMomo(),
                 codeServiceMOMO.getOperateurServiceMomo())) {
             throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
         }
@@ -51,9 +53,9 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
 
         // Parcours de la liste pour séparer les doublons des nouvelles entrées
         for (CodeServiceMOMO c : codeServiceMOMOList) {
-            if (codeServiceMOMORepository.existsByCodeServiceMomoAndOperateurServiceMomo(
-                    c.getCodeServiceMomo(), c.getOperateurServiceMomo())) {
-                duplicateMessages.add("Le code " + c.getCodeServiceMomo()
+            if (codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(
+                    c.getCodeMomo(), c.getOperateurServiceMomo())) {
+                duplicateMessages.add("Le code " + c.getCodeMomo()
                         + " pour l'opérateur " + c.getOperateurServiceMomo() + " existe déjà.");
             } else {
                 toSave.add(c);
@@ -80,8 +82,8 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
             throw new EntityNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + codeServiceMOMO.getId());
         }
         // Vérifier que la nouvelle combinaison (code, opérateur) n'existe pas déjà sur un autre enregistrement
-        Optional<CodeServiceMOMO> existingEntity = codeServiceMOMORepository.findByCodeServiceMomoAndOperateurServiceMomo(
-                codeServiceMOMO.getCodeServiceMomo(), codeServiceMOMO.getOperateurServiceMomo());
+        Optional<CodeServiceMOMO> existingEntity = codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(
+                codeServiceMOMO.getCodeMomo(), codeServiceMOMO.getOperateurServiceMomo());
         if (existingEntity.isPresent() && !existingEntity.get().getId().equals(codeServiceMOMO.getId())) {
             throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
         }
@@ -91,15 +93,15 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     @Override
     public CodeServiceMOMO updateByCodeService(CodeServiceMOMO codeServiceMOMO, String code) {
         // Recherche de l'entité à mettre à jour via le code
-        List<CodeServiceMOMO> entities = codeServiceMOMORepository.findByCodeServiceMomo(code);
+        List<CodeServiceMOMO> entities = codeServiceMOMORepository.findByCodeMomo(code);
         if (entities.isEmpty()) {
             throw new EntityNotFoundCustomException("Aucune entité trouvée pour le code : " + code);
         }
         CodeServiceMOMO entityToUpdate = entities.get(0);
 
         // Vérifier qu'il n'existe pas déjà une autre entité avec la nouvelle combinaison
-        Optional<CodeServiceMOMO> duplicate = codeServiceMOMORepository.findByCodeServiceMomoAndOperateurServiceMomo(
-                codeServiceMOMO.getCodeServiceMomo(), codeServiceMOMO.getOperateurServiceMomo());
+        Optional<CodeServiceMOMO> duplicate = codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(
+                codeServiceMOMO.getCodeMomo(), codeServiceMOMO.getOperateurServiceMomo());
         if (duplicate.isPresent() && !duplicate.get().getId().equals(entityToUpdate.getId())) {
             throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.", HttpStatus.CONFLICT.value());
         }
@@ -123,13 +125,13 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     }
 
     @Override
-    public Optional<CodeServiceMOMO> findByCodeServiceMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
-        return codeServiceMOMORepository.findByCodeServiceMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+    public Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
+        return codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
     }
 
     @Override
-    public List<CodeServiceMOMO> findByCodeServiceMomo(String codeServiceMomo) {
-        return codeServiceMOMORepository.findByCodeServiceMomo(codeServiceMomo);
+    public List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo) {
+        return codeServiceMOMORepository.findByCodeMomo(codeServiceMomo);
     }
 
     @Override
@@ -138,7 +140,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     }
 
     @Override
-    public boolean existsByCodeServiceMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
-        return codeServiceMOMORepository.existsByCodeServiceMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+    public boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
+        return codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
     }
 }

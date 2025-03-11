@@ -102,7 +102,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			List<CodeServiceMOMO> codeServiceList = codeServiceRepository.findByOperateurServiceMomo(operateurMomo);
 			if (!codeServiceList.isEmpty()) {
 				codeServicesForOperator = codeServiceList.stream()
-						.map(CodeServiceMOMO::getCodeServiceMomo)
+						.map(CodeServiceMOMO::getCodeMomo)
 						.collect(Collectors.toList());
 				// Filtrer les transactions dont le codeService figure dans la liste trouvée
 				sqlQuery += " AND t.codeService IN :codeServices";

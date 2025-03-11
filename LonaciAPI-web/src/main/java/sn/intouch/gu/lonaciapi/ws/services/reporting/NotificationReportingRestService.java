@@ -38,7 +38,7 @@ public class NotificationReportingRestService {
             @RequestParam(value = "codeService", required = false) String codeService,
             @RequestParam(value = "operateurMomo", required = false) String operateurMomo,
             @RequestParam(value = "montant", required = false) Double montant,
-            @RequestParam(value = "country") String country
+            @RequestParam(value = "country", required = false) String country
 
     ) throws RuntimeException {
         Date startDate;

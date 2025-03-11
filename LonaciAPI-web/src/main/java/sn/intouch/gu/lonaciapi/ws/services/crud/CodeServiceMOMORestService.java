@@ -54,7 +54,7 @@ public class CodeServiceMOMORestService {
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse<CodeServiceMOMO>> createCodeService(@RequestBody CodeServiceMOMO codeServiceMOMO) {
         Optional<CodeServiceMOMO> existing = codeServiceMOMOService
-                .findByCodeServiceMomoAndOperateurServiceMomo(codeServiceMOMO.getCodeServiceMomo(), codeServiceMOMO.getOperateurServiceMomo());
+                .findByCodeMomoAndOperateurServiceMomo(codeServiceMOMO.getCodeMomo(), codeServiceMOMO.getOperateurServiceMomo());
         if (existing.isPresent()) {
             return new ResponseEntity<>(APIResponse.<CodeServiceMOMO>builder()
                     .code(409)
@@ -128,7 +128,7 @@ public class CodeServiceMOMORestService {
             @RequestParam("codeServiceMomo") String codeServiceMomo,
             @RequestParam("operateurServiceMomo") String operateurServiceMomo) {
         Optional<CodeServiceMOMO> result = codeServiceMOMOService
-                .findByCodeServiceMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+                .findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
         if (result.isPresent()) {
             return ResponseEntity.ok(APIResponse.<CodeServiceMOMO>builder()
                     .code(200)
