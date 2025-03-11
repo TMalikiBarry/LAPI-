@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v2/service-momo")
+@RequestMapping(value = {"/api/v2/service-momo", "/api/v1/service-momo"})
 public class CodeServiceMOMORestService {
 
     private final CodeServiceMOMOService codeServiceMOMOService = (CodeServiceMOMOService) JNDIUtils.

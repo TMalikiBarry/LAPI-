@@ -35,8 +35,8 @@ public class NotificationReportingRestService {
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
-            @RequestParam(value = "codeService", required = false) String codeService,
-            @RequestParam(value = "operateurMomo", required = false) String operateurMomo,
+            @RequestParam(value = "code_service", required = false) String codeService,
+            @RequestParam(value = "operateur_momo", required = false) String operateurMomo,
             @RequestParam(value = "montant", required = false) Double montant,
             @RequestParam(value = "country", required = false) String country
 

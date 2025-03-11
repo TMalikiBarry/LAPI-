@@ -1,6 +1,8 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -137,6 +140,16 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     @Override
     public List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo) {
         return codeServiceMOMORepository.findByOperateurServiceMomo(operateurServiceMomo);
+    }
+
+    @Override
+    public Page<CodeServiceMOMO> findByOptionalParamsPaged(String codeMomo, String operateurServiceMomo, String serviceNom, String type, Date startDate, Date endDate, Pageable pageable) {
+        return codeServiceMOMORepository.findByOptionalParamsPaged(codeMomo, operateurServiceMomo, serviceNom, type, startDate, endDate, pageable);
+    }
+
+    @Override
+    public List<CodeServiceMOMO> findByOptionalParams(String codeMomo, String operateurServiceMomo, String serviceNom, String type, Date startDate, Date endDate) {
+        return codeServiceMOMORepository.findByOptionalParams(codeMomo, operateurServiceMomo, serviceNom, type, startDate, endDate);
     }
 
     @Override
