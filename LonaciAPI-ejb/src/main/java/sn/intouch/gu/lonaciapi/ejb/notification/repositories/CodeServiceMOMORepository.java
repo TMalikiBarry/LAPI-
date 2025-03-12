@@ -19,39 +19,39 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
 
     // Méthode générique non paginée
     @Query("SELECT c FROM CodeServiceMOMO c " +
-            "WHERE (:codeMomo IS NULL OR c.codeMomo = :codeMomo) " +
-            "  AND (:operateurServiceMomo IS NULL OR c.operateurServiceMomo = :operateurServiceMomo) " +
-            "  AND (:serviceNom IS NULL OR c.serviceNom = :serviceNom) " +
+            "WHERE (:code_momo IS NULL OR LOWER(c.codeMomo) LIKE LOWER(CONCAT('%', :code_momo, '%'))) " +
+            "  AND (:operateur_service_momo IS NULL OR LOWER(c.operateurServiceMomo) LIKE LOWER(CONCAT('%', :operateur_service_momo, '%'))) " +
+            "  AND (:service_nom IS NULL OR LOWER(c.serviceNom) LIKE LOWER(CONCAT('%', :service_nom, '%'))) " +
             "  AND (:type IS NULL OR c.type = :type) " +
 //            "  AND ((:startDate IS NULL AND :endDate IS NULL) OR (c.creationDate BETWEEN :startDate AND :endDate))" +
-            "  AND (:startDate IS NULL OR c.creationDate >= :startDate) " +
-            "  AND (:endDate IS NULL OR c.creationDate <= :endDate)" +
-            " ORDER BY c.creationDate DESC")
+            "  AND (:start_date IS NULL OR c.creationDate >= :start_date) " +
+            "  AND (:end_date IS NULL OR c.creationDate <= :end_date)" +
+            "ORDER BY c.creationDate DESC")
     List<CodeServiceMOMO> findByOptionalParams(
-            @Param("codeMomo") String codeMomo,
-            @Param("operateurServiceMomo") String operateurServiceMomo,
-            @Param("serviceNom") String serviceNom,
+            @Param("code_momo") String codeMomo,
+            @Param("operateur_service_momo") String operateurServiceMomo,
+            @Param("service_nom") String serviceNom,
             @Param("type") String type,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate);
+            @Param("start_date") Date startDate,
+            @Param("end_date") Date endDate);
 
     // Méthode générique paginée
     @Query("SELECT c FROM CodeServiceMOMO c " +
-            "WHERE (:codeMomo IS NULL OR c.codeMomo = :codeMomo) " +
-            "  AND (:operateurServiceMomo IS NULL OR c.operateurServiceMomo = :operateurServiceMomo) " +
-            "  AND (:serviceNom IS NULL OR c.serviceNom = :serviceNom) " +
+            "WHERE (:code_momo IS NULL OR LOWER(c.codeMomo) LIKE LOWER(CONCAT('%', :code_momo, '%'))) " +
+            "  AND (:operateur_service_momo IS NULL OR LOWER(c.operateurServiceMomo) LIKE LOWER(CONCAT('%', :operateur_service_momo, '%'))) " +
+            "  AND (:service_nom IS NULL OR LOWER(c.serviceNom) LIKE LOWER(CONCAT('%', :service_nom, '%'))) " +
             "  AND (:type IS NULL OR c.type = :type) " +
 //            "  AND ((:startDate IS NULL AND :endDate IS NULL) OR (c.creationDate BETWEEN :startDate AND :endDate))" +
-            "  AND (:startDate IS NULL OR c.creationDate >= :startDate) " +
-            "  AND (:endDate IS NULL OR c.creationDate <= :endDate)" +
+            "  AND (:start_date IS NULL OR c.creationDate >= :start_date) " +
+            "  AND (:end_date IS NULL OR c.creationDate <= :end_date)" +
             "ORDER BY c.creationDate DESC")
     Page<CodeServiceMOMO> findByOptionalParamsPaged(
-            @Param("codeMomo") String codeMomo,
-            @Param("operateurServiceMomo") String operateurServiceMomo,
-            @Param("serviceNom") String serviceNom,
+            @Param("code_momo") String codeMomo,
+            @Param("operateur_service_momo") String operateurServiceMomo,
+            @Param("service_nom") String serviceNom,
             @Param("type") String type,
-            @Param("startDate") Date startDate,
-            @Param("endDate") Date endDate,
+            @Param("start_date") Date startDate,
+            @Param("end_date") Date endDate,
             Pageable pageable);
 
     Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
