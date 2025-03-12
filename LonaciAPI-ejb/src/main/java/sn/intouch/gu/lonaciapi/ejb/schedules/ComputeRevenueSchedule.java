@@ -101,7 +101,13 @@ public class ComputeRevenueSchedule {
                 }
             } else {
                 log.info("Computing revenue for operator : " + operator.getOperatorId());
-                if (BF_COUNTRY_CODE.equals(operator.getCountry())) {
+                if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
+                    grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));;
+                    integratorRemuneration = computeParameter.getPaymentRate() * (computeParameter.getPaymentFees() * Math.abs(payinOverallVolume))
+                            + computeParameter.getCashinRate() * (computeParameter.getCashinFees() * Math.abs(payoutOverallVolume));
+                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                    royalties = computeParameter.getRoyaltyRate() * revenue;
+                } else {
                     grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(payinOverallVolume)
                             - computeParameter.getCashinRate() * Math.abs(payoutOverallVolume);;
                     integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
@@ -109,15 +115,6 @@ public class ComputeRevenueSchedule {
                     revenue = grossGamingProduct - Math.abs(integratorRemuneration);
                     royalties = computeParameter.getRoyaltyRate() * revenue;
                     grossGamingProduct = 0D;
-                } else if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
-                    grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));;
-                    integratorRemuneration = computeParameter.getPaymentRate() * (computeParameter.getPaymentFees() * Math.abs(payinOverallVolume))
-                            + computeParameter.getCashinRate() * (computeParameter.getCashinFees() * Math.abs(payoutOverallVolume));
-                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
-                    royalties = computeParameter.getRoyaltyRate() * revenue;
-                } else {
-                    log.warn("Country {} is not supported for computing revenue for operator {}.", operator.getCountry(), operator.getOperatorId());
-                    return;
                 }
             }
 
