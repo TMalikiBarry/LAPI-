@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 
 @Service
@@ -77,44 +78,18 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
 
     @Override
     public CodeServiceMOMO update(CodeServiceMOMO codeServiceMOMO) {
-        if (codeServiceMOMO.getId() == null) {
-            throw new BadRequestException("L'ID est requis pour la mise à jour.");
-        }
-        // Vérifier que l'entité existe
-        if (!codeServiceMOMORepository.existsById(codeServiceMOMO.getId())) {
-            throw new EntityNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + codeServiceMOMO.getId());
-        }
-        // Vérifier que la nouvelle combinaison (code, opérateur) n'existe pas déjà sur un autre enregistrement
-        Optional<CodeServiceMOMO> existingEntity = codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(
-                codeServiceMOMO.getCodeMomo(), codeServiceMOMO.getOperateurServiceMomo());
-        if (existingEntity.isPresent() && !existingEntity.get().getId().equals(codeServiceMOMO.getId())) {
-            throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
-        }
-        return codeServiceMOMORepository.save(codeServiceMOMO);
+        return updateEntity(codeServiceMOMO, codeServiceMOMO.getId());
     }
 
     @Override
     public CodeServiceMOMO updateByCodeService(CodeServiceMOMO codeServiceMOMO, String code) {
-        // Recherche de l'entité à mettre à jour via le code
-        List<CodeServiceMOMO> entities = codeServiceMOMORepository.findByCodeMomo(code);
-        if (entities.isEmpty()) {
-            throw new EntityNotFoundCustomException("Aucune entité trouvée pour le code : " + code);
-        }
-        CodeServiceMOMO entityToUpdate = entities.get(0);
+        CodeServiceMOMO existingEntity = codeServiceMOMORepository.findByCodeMomo(code)
+                .stream().findFirst()
+                .orElseThrow(() -> new EntityNotFoundCustomException("Aucune entité trouvée pour le code : " + code));
 
-        // Vérifier qu'il n'existe pas déjà une autre entité avec la nouvelle combinaison
-        Optional<CodeServiceMOMO> duplicate = codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(
-                codeServiceMOMO.getCodeMomo(), codeServiceMOMO.getOperateurServiceMomo());
-        if (duplicate.isPresent() && !duplicate.get().getId().equals(entityToUpdate.getId())) {
-            throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.", HttpStatus.CONFLICT.value());
-        }
-
-        // Mise à jour du champ opérateurMOMO
-        entityToUpdate.setOperateurServiceMomo(codeServiceMOMO.getOperateurServiceMomo());
-
-
-        return codeServiceMOMORepository.save(entityToUpdate);
+        return updateEntity(codeServiceMOMO, existingEntity.getId());
     }
+
 
     @Override
     public CodeServiceMOMO findById(Long id) {
@@ -155,5 +130,42 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     @Override
     public boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
         return codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+    }
+
+    // Méthode générique qui gère la mise à jour
+    private CodeServiceMOMO updateEntity(CodeServiceMOMO codeServiceMOMO, Long id) {
+        if (id == null) throw new BadRequestException("L'ID est requis pour la mise à jour.");
+
+        CodeServiceMOMO existingEntity = codeServiceMOMORepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + id));
+
+        // Vérification unicité si codeMomo et operateurServiceMomo sont fournis
+        Optional.ofNullable(codeServiceMOMO.getCodeMomo()).ifPresent(codeMomo ->
+                Optional.ofNullable(codeServiceMOMO.getOperateurServiceMomo()).ifPresent(operateur -> {
+                    Optional<CodeServiceMOMO> duplicate = codeServiceMOMORepository
+                            .findByCodeMomoAndOperateurServiceMomo(codeMomo, operateur);
+                    if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
+                        throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.", HttpStatus.CONFLICT.value());
+                    }
+                })
+        );
+
+        // Mise à jour des champs modifiés
+        applyUpdates(existingEntity, codeServiceMOMO);
+
+        return codeServiceMOMORepository.save(existingEntity);
+    }
+
+    // Méthode utilitaire pour éviter les if répétitifs
+    private <T> void updateIfNotNull(Consumer<T> setter, T value) {
+        if (value != null) setter.accept(value);
+    }
+
+    private void applyUpdates(CodeServiceMOMO existing, CodeServiceMOMO updates) {
+        updateIfNotNull(existing::setCodeMomo, updates.getCodeMomo());
+        updateIfNotNull(existing::setOperateurServiceMomo, updates.getOperateurServiceMomo());
+        updateIfNotNull(existing::setServiceNom, updates.getServiceNom());
+        updateIfNotNull(existing::setType, updates.getType());
+        updateIfNotNull(existing::setCreationDate, updates.getCreationDate());
     }
 }

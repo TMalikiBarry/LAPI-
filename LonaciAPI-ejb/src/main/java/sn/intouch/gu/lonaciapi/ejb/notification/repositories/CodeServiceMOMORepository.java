@@ -59,6 +59,7 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
     List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo);
 
     // Retrouve la liste de toutes les entités associées à un opérateur
+    @Query("SELECT c FROM CodeServiceMOMO c WHERE LOWER(c.operateurServiceMomo) = LOWER(:operateurServiceMomo)")
     List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo);
 
     // Vérifie l'existence d'une association spécifique entre un code et un opérateur

@@ -33,7 +33,7 @@ public class CodeServiceMOMORestService {
     private final CodeServiceMOMOService codeServiceMOMOService = (CodeServiceMOMOService) JNDIUtils.
             lookUpEJB(EJBRegistry.CodeServiceMOMOServiceBean);
 
-    @GetMapping(value = "/search_paged", produces = "application/json")
+    @GetMapping(value = "/filter_paged", produces = "application/json")
     public ResponseEntity<APIResponse<Page<CodeServiceMOMO>>> searchPaged(
             @RequestParam(value = "code_momo", required = false) String codeMomo,
             @RequestParam(value = "operateur_service_momo", required = false) String operateurServiceMomo,
@@ -56,7 +56,7 @@ public class CodeServiceMOMORestService {
                 .build());
     }
 
-    @GetMapping(value = "/search", produces = "application/json")
+    @GetMapping(value = "/filter", produces = "application/json")
     public ResponseEntity<APIResponse<List<CodeServiceMOMO>>> search(
             @RequestParam(value = "code_momo", required = false) String codeMomo,
             @RequestParam(value = "operateur_service_momo", required = false) String operateurServiceMomo,
@@ -130,10 +130,8 @@ public class CodeServiceMOMORestService {
     }
 
     // Mise à jour par ID (PATCH)
-    @PatchMapping(value = "/{id}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<APIResponse<CodeServiceMOMO>> updateCodeService(@PathVariable Long id,
-                                                                          @RequestBody CodeServiceMOMO codeServiceMOMO) {
-        codeServiceMOMO.setId(id);
+    @PatchMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<APIResponse<CodeServiceMOMO>> updateCodeService(@RequestBody CodeServiceMOMO codeServiceMOMO) {
         CodeServiceMOMO updated = codeServiceMOMOService.update(codeServiceMOMO);
         return ResponseEntity.ok(APIResponse.<CodeServiceMOMO>builder()
                 .code(200)
