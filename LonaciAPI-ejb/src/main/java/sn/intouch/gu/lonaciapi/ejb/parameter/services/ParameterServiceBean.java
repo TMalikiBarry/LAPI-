@@ -1,5 +1,7 @@
 package sn.intouch.gu.lonaciapi.ejb.parameter.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sn.intouch.gu.lonaciapi.ejb.parameter.entities.Parameter;
 
 import javax.ejb.Stateless;
@@ -12,6 +14,7 @@ import java.util.List;
 @Stateless
 public class ParameterServiceBean implements ParameterService {
 
+    private static final Logger log = LoggerFactory.getLogger(ParameterServiceBean.class);
     @PersistenceContext(unitName = "lonaciPU")
     EntityManager em;
 
@@ -38,6 +41,7 @@ public class ParameterServiceBean implements ParameterService {
             parameter = (Parameter) query.getSingleResult();
         } catch (Exception e) {
             System.out.println("Pas de parametre de code " + code);
+            log.error("##### getParameterByCode ERREUR  " + e);
             e.printStackTrace();
         }
         return parameter;

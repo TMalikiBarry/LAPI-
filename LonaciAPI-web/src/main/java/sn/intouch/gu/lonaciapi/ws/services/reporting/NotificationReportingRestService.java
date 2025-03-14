@@ -1,6 +1,7 @@
 package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -20,6 +21,7 @@ import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @RestController
 public class NotificationReportingRestService {
     private final LonaciTrxService lonaciNotifService = (LonaciTrxService) JNDIUtils.lookUpEJB(EJBRegistry.LonaciTrxServiceBean);
@@ -62,12 +64,14 @@ public class NotificationReportingRestService {
 
     private void validateDateRange(Date startDate, Date endDate) {
         long maxInterval = getDateIntervalInMillis();
+        long maxIntervalInDays = maxInterval / (24 * 3600 * 1000);
         if (endDate.before(startDate)) {
             throw new InvalidDateException("La date de fin ne peut pas être antérieure à la date de début.");
         }
+
+        log.warn(String.format("#############  On a comme intervalle %d", maxIntervalInDays));
         if (endDate.getTime() - startDate.getTime() > maxInterval) {
             long providedInterval = (endDate.getTime() - startDate.getTime()) / (24 * 3600 * 1000); // Convertir en jours
-            long maxIntervalInDays = maxInterval / (24 * 3600 * 1000); // Convertir en jours
 
             throw new InvalidDateException(
                     "L'intervalle entre les deux dates est de " + providedInterval +
@@ -79,6 +83,7 @@ public class NotificationReportingRestService {
     private Long getDateIntervalInMillis() {
         Parameter parameter = parameterService.getParameterByCode("PARAM_TWO_DATES_INTERVAL_IN_DAYS");
 
+        log.warn("########## " + parameter);
         if (parameter != null && parameter.getPrmValue() != 0) {
             return parameter.getPrmValue() * 24 * 3600 * 1000L;
         }

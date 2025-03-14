@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.DuplicateEntryException;
 import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
+import sn.intouch.gu.lonaciapi.config.ResourceAlreadyExistsException;
 import sn.intouch.gu.lonaciapi.ejb.dto.SaveAllResponse;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO;
 import sn.intouch.gu.lonaciapi.ejb.notification.repositories.CodeServiceMOMORepository;
@@ -46,6 +47,8 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
                 codeServiceMOMO.getCodeMomo(),
                 codeServiceMOMO.getOperateurServiceMomo())) {
             throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
+        } else if (codeServiceMOMORepository.existsById(codeServiceMOMO.getId())) {
+            throw new ResourceAlreadyExistsException("Code service MOMO avec l'id " + codeServiceMOMO.getId() + " existe déjà!");
         }
         return codeServiceMOMORepository.save(codeServiceMOMO);
     }
@@ -54,6 +57,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     public SaveAllResponse saveAll(List<CodeServiceMOMO> codeServiceMOMOList) {
         List<CodeServiceMOMO> toSave = new ArrayList<>();
         List<String> duplicateMessages = new ArrayList<>();
+        List<String> alreadySavedMessages = new ArrayList<>();
 
         // Parcours de la liste pour séparer les doublons des nouvelles entrées
         for (CodeServiceMOMO c : codeServiceMOMOList) {
@@ -61,6 +65,8 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
                     c.getCodeMomo(), c.getOperateurServiceMomo())) {
                 duplicateMessages.add("Le code " + c.getCodeMomo()
                         + " pour l'opérateur " + c.getOperateurServiceMomo() + " existe déjà.");
+            } else if (codeServiceMOMORepository.existsById(c.getId())) {
+                alreadySavedMessages.add("Le service MOMO ayant pour identifiant " + c.getId() + " existe déjà");
             } else {
                 toSave.add(c);
             }
@@ -73,6 +79,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
         return SaveAllResponse.builder()
                 .savedEntries(savedEntries)
                 .duplicateMessages(duplicateMessages)
+                .alreadySavedMessages(alreadySavedMessages)
                 .build();
     }
 

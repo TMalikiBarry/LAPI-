@@ -15,4 +15,5 @@ import java.util.List;
 public class SaveAllResponse {
     private List<CodeServiceMOMO> savedEntries;
     private List<String> duplicateMessages;
+    private List<String> alreadySavedMessages;
 }

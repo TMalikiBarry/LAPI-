@@ -3,8 +3,8 @@ package sn.intouch.gu.lonaciapi.ws.config;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import sn.intouch.gu.lonaciapi.config.*;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -106,5 +106,13 @@ public class GlobalExceptionHandler {
                 .reason("Internal Server Error: " + ex.getMessage())
                 .build();
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<APIResponse> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
+        return new ResponseEntity<>(APIResponse.builder()
+                .code(201) // Code personnalisé
+                .reason("CREATED: " + ex.getMessage())
+                .build(), HttpStatus.CREATED);
     }
 }

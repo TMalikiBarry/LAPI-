@@ -57,6 +57,29 @@ public class CodeServiceMOMO {
         this.creationDate = new Date();
         this.modificationDate = new Date();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("CodeServiceMOMO {");
+
+        if (id != null) {
+            sb.append(" id=").append(id).append(",");
+        }
+
+        sb.append(" codeMomo='").append(codeMomo).append("'");
+        sb.append(", operateurServiceMomo='").append(operateurServiceMomo).append("'");
+
+        if (serviceNom != null) {
+            sb.append(", serviceNom='").append(serviceNom).append("'");
+        }
+
+        if (type != null) {
+            sb.append(", type='").append(type).append("'");
+        }
+
+        sb.append(" }");
+        return sb.toString();
+    }
 }
 
 
