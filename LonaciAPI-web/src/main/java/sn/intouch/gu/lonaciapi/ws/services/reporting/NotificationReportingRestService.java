@@ -66,7 +66,13 @@ public class NotificationReportingRestService {
             throw new InvalidDateException("La date de fin ne peut pas être antérieure à la date de début.");
         }
         if (endDate.getTime() - startDate.getTime() > maxInterval) {
-            throw new InvalidDateException("L'intervalle entre les deux dates dépasse la limite autorisée.");
+            long providedInterval = (endDate.getTime() - startDate.getTime()) / (24 * 3600 * 1000); // Convertir en jours
+            long maxIntervalInDays = maxInterval / (24 * 3600 * 1000); // Convertir en jours
+
+            throw new InvalidDateException(
+                    "L'intervalle entre les deux dates est de " + providedInterval +
+                            " jours, ce qui dépasse la limite autorisée de " + maxIntervalInDays + " jours."
+            );
         }
     }
 
