@@ -1,12 +1,12 @@
 package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sn.intouch.gu.lonaciapi.config.InvalidDateException;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
@@ -31,8 +31,8 @@ public class NotificationReportingRestService {
             @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int size,
             @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir,
-            @RequestParam(value = "start_date") String start_date,
-            @RequestParam(value = "end_date") String end_date,
+            @RequestParam(value = "start_date") String startDateStr,
+            @RequestParam(value = "end_date") String endDateStr,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "code_service", required = false) String codeService,
@@ -40,31 +40,43 @@ public class NotificationReportingRestService {
             @RequestParam(value = "montant", required = false) Double montant,
             @RequestParam(value = "country", required = false) String country
 
-    ) throws RuntimeException {
-        Date startDate;
-        Date endDate;
-        try {
-            startDate = new Date(Long.parseLong(start_date));
-            endDate = new Date(Long.parseLong(end_date));
-            if (endDate.before(startDate) || (endDate.getTime() - startDate.getTime() > getDateIntervalInMillis()))
-                throw new RuntimeException("Bad date format");
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    ) {
+        Date startDate = parseDate(startDateStr, "Format de date invalide pour start_date.");
+        Date endDate = parseDate(endDateStr, "Format de date invalide pour end_date.");
 
-        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService.customFindByDateBetweenAndOperateurIDAndTypeTransaction(
-                country, startDate, endDate, operator, type, codeService, operateurMomo, montant, sortBy, sortDir, size, page);
+        validateDateRange(startDate, endDate);
+
+        PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService
+                .customFindByDateBetweenAndOperateurIDAndTypeTransaction(country, startDate, endDate, operator, type, codeService, operateurMomo, montant, sortBy, sortDir, size, page);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
 
+    private Date parseDate(String dateStr, String errorMessage) {
+        try {
+            return new Date(Long.parseLong(dateStr));
+        } catch (NumberFormatException e) {
+            throw new InvalidDateException(errorMessage);
+        }
+    }
+
+    private void validateDateRange(Date startDate, Date endDate) {
+        long maxInterval = getDateIntervalInMillis();
+        if (endDate.before(startDate)) {
+            throw new InvalidDateException("La date de fin ne peut pas être antérieure à la date de début.");
+        }
+        if (endDate.getTime() - startDate.getTime() > maxInterval) {
+            throw new InvalidDateException("L'intervalle entre les deux dates dépasse la limite autorisée.");
+        }
+    }
+
     private Long getDateIntervalInMillis() {
         Parameter parameter = parameterService.getParameterByCode("PARAM_TWO_DATES_INTERVAL_IN_DAYS");
-        if (parameter != null) {
-            return (long) (parameter.getPrmValue() * 24 * 3600 * 1000);
+
+        if (parameter != null && parameter.getPrmValue() != 0) {
+            return parameter.getPrmValue() * 24 * 3600 * 1000L;
         }
+
         return AppConstants.ONE_DAY_IN_MILLIS;
     }
 

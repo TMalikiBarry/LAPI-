@@ -5,12 +5,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import sn.intouch.gu.lonaciapi.config.BadRequestException;
-import sn.intouch.gu.lonaciapi.config.DuplicateEntryException;
-import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
+import sn.intouch.gu.lonaciapi.config.*;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
 import javax.validation.ConstraintViolationException;
+import javax.ws.rs.ForbiddenException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,6 +69,33 @@ public class GlobalExceptionHandler {
                 .reason(ex.getMessage())
                 .build();
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidDateException.class)
+    public ResponseEntity<APIResponse<Object>> handleInvalidDateException(InvalidDateException ex) {
+        APIResponse<Object> response = APIResponse.builder()
+                .code(HttpStatus.NOT_ACCEPTABLE.value()) // 406
+                .reason(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_ACCEPTABLE);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<APIResponse<Object>> handleUnauthorizedException(UnauthorizedException ex) {
+        APIResponse<Object> response = APIResponse.builder()
+                .code(HttpStatus.UNAUTHORIZED.value()) // 401
+                .reason("Accès non autorisé. Veuillez vous authentifier.")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<APIResponse<Object>> handleForbiddenException(ForbiddenException ex) {
+        APIResponse<Object> response = APIResponse.builder()
+                .code(HttpStatus.FORBIDDEN.value()) // 403
+                .reason("Accès interdit. Vous n'avez pas les permissions requises.")
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     // Gestion des exceptions non prévues ou générales
