@@ -47,4 +47,6 @@ public interface CodeServiceMOMOService {
             Date endDate);
     // Vérifie l'existence d'une association spécifique entre un code et un opérateur
     boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+
+    List<String> findDistinctOperateurs();
 }

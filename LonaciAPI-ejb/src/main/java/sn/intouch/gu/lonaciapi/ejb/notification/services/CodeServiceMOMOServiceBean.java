@@ -47,7 +47,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
                 codeServiceMOMO.getCodeMomo(),
                 codeServiceMOMO.getOperateurServiceMomo())) {
             throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
-        } else if (codeServiceMOMORepository.existsById(codeServiceMOMO.getId())) {
+        } else if (codeServiceMOMO.getId() != null && codeServiceMOMORepository.existsById(codeServiceMOMO.getId())) {
             throw new ResourceAlreadyExistsException("Code service MOMO avec l'id " + codeServiceMOMO.getId() + " existe déjà!");
         }
         return codeServiceMOMORepository.save(codeServiceMOMO);
@@ -137,6 +137,11 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     @Override
     public boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
         return codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+    }
+
+    @Override
+    public List<String> findDistinctOperateurs() {
+        return codeServiceMOMORepository.findDistinctOperateurs();
     }
 
     // Méthode générique qui gère la mise à jour

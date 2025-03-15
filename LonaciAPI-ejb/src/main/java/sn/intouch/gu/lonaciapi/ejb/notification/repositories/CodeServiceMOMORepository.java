@@ -64,4 +64,7 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
 
     // Vérifie l'existence d'une association spécifique entre un code et un opérateur
     boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+
+    @Query("SELECT DISTINCT c.operateurServiceMomo FROM CodeServiceMOMO c")
+    List<String> findDistinctOperateurs();
 }

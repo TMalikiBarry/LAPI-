@@ -4,6 +4,7 @@ package sn.intouch.gu.lonaciapi.ws.services.crud;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -180,6 +181,19 @@ public class CodeServiceMOMORestService {
                 .reason("SUCCESS")
                 .data(exists)
                 .build());
+    }
+
+    @GetMapping("/operateurs")
+    public ResponseEntity<APIResponse<List<String>>> getDistinctOperateurs() {
+        List<String> operateurs = codeServiceMOMOService.findDistinctOperateurs();
+
+        APIResponse<List<String>> response = APIResponse.<List<String>>builder()
+                .code(HttpStatus.OK.value())
+                .reason("Liste des opérateurs de service MOMO distincts")
+                .data(operateurs)
+                .build();
+
+        return ResponseEntity.ok(response);
     }
 
     private Date parseDate(String dateStr, boolean isStart) {

@@ -2,6 +2,7 @@ package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.util.StringUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.repositories.OperatorRepository;
 
@@ -25,6 +26,7 @@ public class OperatorServiceBean implements OperatorService {
 	
 	@Override
 	public Operator findByOperatorID(String opid){
+        if (!StringUtils.hasText(opid)) return null;
 		return operatorRepository.findByOperatorIdAndSupprime(opid, false).orElseGet(() -> null);
 	}
 

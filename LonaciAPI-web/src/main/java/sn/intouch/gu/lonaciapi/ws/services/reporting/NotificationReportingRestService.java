@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.InvalidDateException;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
@@ -43,15 +44,32 @@ public class NotificationReportingRestService {
             @RequestParam(value = "country", required = false) String country
 
     ) {
+
+        validatePageSize(size);
+
         Date startDate = parseDate(startDateStr, "Format de date invalide pour start_date.");
         Date endDate = parseDate(endDateStr, "Format de date invalide pour end_date.");
 
         validateDateRange(startDate, endDate);
 
+        if (size >= 1250) {
+            throw new BadRequestException("Le paramètre size ne doit pas dépasser 1200");
+        }
+
         PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService
                 .customFindByDateBetweenAndOperateurIDAndTypeTransaction(country, startDate, endDate, operator, type, codeService, operateurMomo, montant, sortBy, sortDir, size, page);
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
+    }
+
+    private void validatePageSize(int size) {
+        int MAX_SIZE = AppConstants.MAX_PAGE_SIZE;
+        Parameter param = parameterService.getParameterByCode("PARAM_MAX_PAGE_SIZE_AUTHORIZED");
+
+        if (param != null && param.getPrmValue() != 0) MAX_SIZE = param.getPrmValue();
+
+        if (size > MAX_SIZE) throw new BadRequestException(String.format("La taille de la page ( param size )  ne" +
+                " doit pas dépasser %d", MAX_SIZE));
     }
 
     private Date parseDate(String dateStr, String errorMessage) {
