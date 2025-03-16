@@ -52,10 +52,6 @@ public class NotificationReportingRestService {
 
         validateDateRange(startDate, endDate);
 
-        if (size >= 1250) {
-            throw new BadRequestException("Le paramètre size ne doit pas dépasser 1200");
-        }
-
         PaginationResponse<List<LonaciTrx>> notifications = lonaciNotifService
                 .customFindByDateBetweenAndOperateurIDAndTypeTransaction(country, startDate, endDate, operator, type, codeService, operateurMomo, montant, sortBy, sortDir, size, page);
 
