@@ -8,7 +8,6 @@ import sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO;
 import javax.ejb.Local;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @Local
 public interface CodeServiceMOMOService {
@@ -22,7 +21,7 @@ public interface CodeServiceMOMOService {
     CodeServiceMOMO findById(Long id);
     List<CodeServiceMOMO> findAll();
 
-    Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+    CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
     // Retrouve l'entité par son code unique
     List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo);
 

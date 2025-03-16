@@ -65,7 +65,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
                     c.getCodeMomo(), c.getOperateurServiceMomo())) {
                 duplicateMessages.add("Le code " + c.getCodeMomo()
                         + " pour l'opérateur " + c.getOperateurServiceMomo() + " existe déjà.");
-            } else if (codeServiceMOMORepository.existsById(c.getId())) {
+            } else if ((c.getId() != null && codeServiceMOMORepository.existsById(c.getId()))) {
                 alreadySavedMessages.add("Le service MOMO ayant pour identifiant " + c.getId() + " existe déjà");
             } else {
                 toSave.add(c);
@@ -110,8 +110,9 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     }
 
     @Override
-    public Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
-        return codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+    public CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
+        return codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo).orElseThrow(
+                () -> new EntityNotFoundCustomException("Aucune entrée trouvée pour cette combinaison."));
     }
 
     @Override

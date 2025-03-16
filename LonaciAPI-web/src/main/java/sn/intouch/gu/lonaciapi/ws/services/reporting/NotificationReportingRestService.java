@@ -65,7 +65,7 @@ public class NotificationReportingRestService {
         if (param != null && param.getPrmValue() != 0) MAX_SIZE = param.getPrmValue();
 
         if (size > MAX_SIZE) throw new BadRequestException(String.format("La taille de la page ( param size )  ne" +
-                " doit pas dépasser %d", MAX_SIZE));
+                " doit pas dépasser %d !!!", MAX_SIZE));
     }
 
     private Date parseDate(String dateStr, String errorMessage) {

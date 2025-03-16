@@ -9,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
-import sn.intouch.gu.lonaciapi.config.DuplicateEntryException;
-import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
 import sn.intouch.gu.lonaciapi.ejb.dto.SaveAllResponse;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
@@ -25,7 +23,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = {"/api/v2/service-momo", "/api/v1/service-momo"})
@@ -105,12 +102,7 @@ public class CodeServiceMOMORestService {
     // Création d'une nouvelle entrée
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse<CodeServiceMOMO>> createCodeService(@RequestBody CodeServiceMOMO codeServiceMOMO) {
-        Optional<CodeServiceMOMO> existing = codeServiceMOMOService
-                .findByCodeMomoAndOperateurServiceMomo(codeServiceMOMO.getCodeMomo(),
-                        codeServiceMOMO.getOperateurServiceMomo());
-        if (existing.isPresent()) {
-            throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
-        }
+
         CodeServiceMOMO saved = codeServiceMOMOService.save(codeServiceMOMO);
         return ResponseEntity.ok(APIResponse.<CodeServiceMOMO>builder()
                 .code(200)
@@ -158,16 +150,14 @@ public class CodeServiceMOMORestService {
     public ResponseEntity<APIResponse<CodeServiceMOMO>> searchByCodeAndOperator(
             @RequestParam("codeServiceMomo") String codeServiceMomo,
             @RequestParam("operateurServiceMomo") String operateurServiceMomo) {
-        Optional<CodeServiceMOMO> result = codeServiceMOMOService
+        CodeServiceMOMO result = codeServiceMOMOService
                 .findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
-        if (result.isPresent()) {
-            return ResponseEntity.ok(APIResponse.<CodeServiceMOMO>builder()
-                    .code(200)
-                    .reason("SUCCESS")
-                    .data(result.get())
-                    .build());
-        }
-        throw new EntityNotFoundCustomException("Aucune entrée trouvée pour cette combinaison.");
+
+        return ResponseEntity.ok(APIResponse.<CodeServiceMOMO>builder()
+                .code(200)
+                .reason("SUCCESS")
+                .data(result)
+                .build());
     }
 
     // Vérifier l'existence d'une association
