@@ -34,6 +34,9 @@ public class CodeServiceMOMO {
     @Column(name = "operateur_service_momo")
     private String operateurServiceMomo;
 
+    @Column(name = "code_iso")
+    private String codeIso;
+
     @Column(name = "service_nom")
     private String serviceNom;
 

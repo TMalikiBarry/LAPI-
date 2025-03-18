@@ -45,7 +45,8 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     public CodeServiceMOMO save(CodeServiceMOMO codeServiceMOMO) {
         if (codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(
                 codeServiceMOMO.getCodeMomo(),
-                codeServiceMOMO.getOperateurServiceMomo())) {
+                codeServiceMOMO.getOperateurServiceMomo(),
+                codeServiceMOMO.getCodeIso())) {
             throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.");
         } else if (codeServiceMOMO.getId() != null && codeServiceMOMORepository.existsById(codeServiceMOMO.getId())) {
             throw new ResourceAlreadyExistsException("Code service MOMO avec l'id " + codeServiceMOMO.getId() + " existe déjà!");
@@ -62,7 +63,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
         // Parcours de la liste pour séparer les doublons des nouvelles entrées
         for (CodeServiceMOMO c : codeServiceMOMOList) {
             if (codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(
-                    c.getCodeMomo(), c.getOperateurServiceMomo())) {
+                    c.getCodeMomo(), c.getOperateurServiceMomo(), c.getCodeIso())) {
                 duplicateMessages.add("Le code " + c.getCodeMomo()
                         + " pour l'opérateur " + c.getOperateurServiceMomo() + " existe déjà.");
             } else if ((c.getId() != null && codeServiceMOMORepository.existsById(c.getId()))) {
@@ -90,7 +91,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
 
     @Override
     public CodeServiceMOMO updateByCodeService(CodeServiceMOMO codeServiceMOMO, String code) {
-        CodeServiceMOMO existingEntity = codeServiceMOMORepository.findByCodeMomo(code)
+        CodeServiceMOMO existingEntity = codeServiceMOMORepository.findByCodeMomo(code, codeServiceMOMO.getCodeIso())
                 .stream().findFirst()
                 .orElseThrow(() -> new EntityNotFoundCustomException("Aucune entité trouvée pour le code : " + code));
 
@@ -110,39 +111,39 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     }
 
     @Override
-    public CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
-        return codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo).orElseThrow(
+    public CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo, String codeISO) {
+        return codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo, codeISO).orElseThrow(
                 () -> new EntityNotFoundCustomException("Aucune entrée trouvée pour cette combinaison."));
     }
 
     @Override
-    public List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo) {
-        return codeServiceMOMORepository.findByCodeMomo(codeServiceMomo);
+    public List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo, String codeIso) {
+        return codeServiceMOMORepository.findByCodeMomo(codeServiceMomo, codeIso);
     }
 
     @Override
-    public List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo) {
-        return codeServiceMOMORepository.findByOperateurServiceMomo(operateurServiceMomo);
+    public List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo, String codeIso) {
+        return codeServiceMOMORepository.findByOperateurServiceMomo(operateurServiceMomo, codeIso);
     }
 
     @Override
-    public Page<CodeServiceMOMO> findByOptionalParamsPaged(String codeMomo, String operateurServiceMomo, String serviceNom, String type, Date startDate, Date endDate, Pageable pageable) {
-        return codeServiceMOMORepository.findByOptionalParamsPaged(codeMomo, operateurServiceMomo, serviceNom, type, startDate, endDate, pageable);
+    public Page<CodeServiceMOMO> findByOptionalParamsPaged(String codeMomo, String operateurServiceMomo, String serviceNom, String type, String codeISO, Date startDate, Date endDate, Pageable pageable) {
+        return codeServiceMOMORepository.findByOptionalParamsPaged(codeMomo, operateurServiceMomo, serviceNom, type, codeISO, startDate, endDate, pageable);
     }
 
     @Override
-    public List<CodeServiceMOMO> findByOptionalParams(String codeMomo, String operateurServiceMomo, String serviceNom, String type, Date startDate, Date endDate) {
-        return codeServiceMOMORepository.findByOptionalParams(codeMomo, operateurServiceMomo, serviceNom, type, startDate, endDate);
+    public List<CodeServiceMOMO> findByOptionalParams(String codeMomo, String operateurServiceMomo, String serviceNom, String type, String codeISO, Date startDate, Date endDate) {
+        return codeServiceMOMORepository.findByOptionalParams(codeMomo, operateurServiceMomo, serviceNom, type, codeISO, startDate, endDate);
     }
 
     @Override
-    public boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo) {
-        return codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+    public boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo, String codeISO) {
+        return codeServiceMOMORepository.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo, codeISO);
     }
 
     @Override
-    public List<String> findDistinctOperateurs() {
-        return codeServiceMOMORepository.findDistinctOperateurs();
+    public List<String> findDistinctOperateurs(String codeIso) {
+        return codeServiceMOMORepository.findDistinctOperateurs(codeIso);
     }
 
     // Méthode générique qui gère la mise à jour
@@ -156,7 +157,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
         Optional.ofNullable(codeServiceMOMO.getCodeMomo()).ifPresent(codeMomo ->
                 Optional.ofNullable(codeServiceMOMO.getOperateurServiceMomo()).ifPresent(operateur -> {
                     Optional<CodeServiceMOMO> duplicate = codeServiceMOMORepository
-                            .findByCodeMomoAndOperateurServiceMomo(codeMomo, operateur);
+                            .findByCodeMomoAndOperateurServiceMomo(codeMomo, operateur, codeServiceMOMO.getCodeIso());
                     if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
                         throw new DuplicateEntryException("Ce code pour cet opérateur existe déjà.", HttpStatus.CONFLICT.value());
                     }

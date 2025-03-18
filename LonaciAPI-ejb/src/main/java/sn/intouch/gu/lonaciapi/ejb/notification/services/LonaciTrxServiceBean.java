@@ -5,6 +5,7 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.util.StringUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
+import sn.intouch.gu.lonaciapi.ejb.notification.models.LonaciTrxDTO;
 import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
 import sn.intouch.gu.lonaciapi.ejb.notification.repositories.CodeServiceMOMORepository;
 
@@ -89,7 +90,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	}
 
 	@Override
-	public PaginationResponse<List<LonaciTrx>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(
+	public PaginationResponse<List<LonaciTrxDTO>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(
             String country, Date startDate, Date endDate, String operatorId, String typeTransaction, String codeService,
 			String operateurMomo, Double montant, String sortBy, String sortDir, int pageSize, int page
 	) {
@@ -99,7 +100,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		// Si le filtre opérateur est fourni, on recherche les codes services associés à cet opérateur
 		List<String> codeServicesForOperator = null;
 		if (StringUtils.hasText(operateurMomo)) {
-			List<CodeServiceMOMO> codeServiceList = codeServiceRepository.findByOperateurServiceMomo(operateurMomo);
+			List<CodeServiceMOMO> codeServiceList = codeServiceRepository.findByOperateurServiceMomo(operateurMomo, country);
 			if (!codeServiceList.isEmpty()) {
 				codeServicesForOperator = codeServiceList.stream()
 						.map(CodeServiceMOMO::getCodeMomo)
@@ -133,7 +134,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			sqlQuery += " AND t.country = :country";
 			aggSqlQuery += " AND t.country = :country";
 		}
-		if (sortBy != null && sortDir != null) {
+		if (!StringUtils.hasText(sortBy) && !StringUtils.hasText(sortDir)) {
 			sqlQuery += " ORDER BY " + " " + sortBy + " " + sortDir;
 		} else {
 			sqlQuery += " ORDER BY t.date DESC";
@@ -184,11 +185,59 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		long totalsize = Long.parseLong((aggResult.get(0)[0]).toString());
 		Double sum = (aggResult.get(0)[1]) != null ? Double.parseDouble((aggResult.get(0)[1]).toString()) : 0;
 
-		return PaginationResponse.<List<LonaciTrx>>builder()
+		// Récupérer la liste des transactions
+		List<LonaciTrx> transactions = query.getResultList();
+
+		// Mapping des entités LonaciTrx vers LonaciTrxDTO
+		List<LonaciTrxDTO> dtoList = transactions.stream()
+				.map(this::mapToDTO)
+				.collect(Collectors.toList());
+
+
+		return PaginationResponse.<List<LonaciTrxDTO>>builder()
 				.totalSize(totalsize)
 				.sum(sum)
 				.pageSize(pageSize)
-				.data(query.getResultList())
+				.data(dtoList)
 				.build();
+	}
+
+
+	/**
+	 * Méthode utilitaire pour mapper une entité LonaciTrx vers LonaciTrxDTO.
+	 * Pour le champ operateurServiceMomo, on se base sur le code_service et la table CodeServiceMOMO.
+	 */
+	private LonaciTrxDTO mapToDTO(LonaciTrx trx) {
+		LonaciTrxDTO dto = LonaciTrxDTO.builder()
+				.transactionId(trx.getTransactionId())
+				.operateurID(trx.getOperateurID())
+				.operateurLibelle(trx.getOperateurLibelle())
+				.idFromPartner(trx.getIdFromPartner())
+				.codeService(trx.getCodeService())
+				.typeTransaction(trx.getTypeTransaction())
+				.montant(trx.getMontant())
+				.destinataire(trx.getDestinataire())
+				.date(trx.getDate())
+				.lonaciTransactionID(trx.getLonaciTransactionID())
+				.country(trx.getCountry())
+				.build();
+
+		// Récupérer le CodeServiceMOMO correspondant à partir du code_service.
+		// Ici, on utilise "country" comme codeIso pour filtrer.
+		/*Optional<CodeServiceMOMO> cs = codeServiceRepository.findByCodeMomo(dto.getCodeService(), trx.getCountry());
+		cs.ifPresent(value -> dto.setOperateurServiceMomo(value.getOperateurServiceMomo()));
+
+		return dto;*/
+
+		// Utiliser la méthode du repository qui renvoie une liste pour récupérer le codeServiceMOMO correspondant
+		List<CodeServiceMOMO> codeServices = codeServiceRepository.findByCodeMomo(dto.getCodeService(), trx.getCountry());
+		if (!codeServices.isEmpty()) {
+			// On prend le premier élément trouvé (ou appliquez une autre logique si nécessaire)
+			dto.setOperateurServiceMomo(codeServices.get(0).getOperateurServiceMomo());
+		} else {
+			dto.setOperateurServiceMomo(null);
+		}
+
+		return dto;
 	}
 }

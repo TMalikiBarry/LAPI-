@@ -23,6 +23,7 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
             "  AND (:operateur_service_momo IS NULL OR LOWER(c.operateurServiceMomo) LIKE LOWER(CONCAT('%', :operateur_service_momo, '%'))) " +
             "  AND (:service_nom IS NULL OR LOWER(c.serviceNom) LIKE LOWER(CONCAT('%', :service_nom, '%'))) " +
             "  AND (:type IS NULL OR c.type = :type) " +
+            "  AND (:code_iso IS NULL OR c.codeIso = :code_iso) " +
 //            "  AND ((:startDate IS NULL AND :endDate IS NULL) OR (c.creationDate BETWEEN :startDate AND :endDate))" +
             "  AND (:start_date IS NULL OR c.creationDate >= :start_date) " +
             "  AND (:end_date IS NULL OR c.creationDate <= :end_date)" +
@@ -32,6 +33,7 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
             @Param("operateur_service_momo") String operateurServiceMomo,
             @Param("service_nom") String serviceNom,
             @Param("type") String type,
+            @Param("code_iso") String codeIso,
             @Param("start_date") Date startDate,
             @Param("end_date") Date endDate);
 
@@ -41,6 +43,7 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
             "  AND (:operateur_service_momo IS NULL OR LOWER(c.operateurServiceMomo) LIKE LOWER(CONCAT('%', :operateur_service_momo, '%'))) " +
             "  AND (:service_nom IS NULL OR LOWER(c.serviceNom) LIKE LOWER(CONCAT('%', :service_nom, '%'))) " +
             "  AND (:type IS NULL OR c.type = :type) " +
+            "  AND (:code_iso IS NULL OR c.codeIso = :code_iso) " +
 //            "  AND ((:startDate IS NULL AND :endDate IS NULL) OR (c.creationDate BETWEEN :startDate AND :endDate))" +
             "  AND (:start_date IS NULL OR c.creationDate >= :start_date) " +
             "  AND (:end_date IS NULL OR c.creationDate <= :end_date)" +
@@ -50,21 +53,50 @@ public interface CodeServiceMOMORepository extends JpaRepository<CodeServiceMOMO
             @Param("operateur_service_momo") String operateurServiceMomo,
             @Param("service_nom") String serviceNom,
             @Param("type") String type,
+            @Param("code_iso") String codeISO,
             @Param("start_date") Date startDate,
             @Param("end_date") Date endDate,
             Pageable pageable);
 
-    Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
-    // Retrouve l'entité par son code unique
-    List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo);
+    @Query("SELECT c FROM CodeServiceMOMO c " +
+            "WHERE c.codeMomo = :codeMomo " +
+            "  AND c.operateurServiceMomo = :operateurMomo " +
+            "  AND (:codeIso IS NULL OR c.codeIso = :codeIso) ORDER BY c.creationDate DESC")
+    Optional<CodeServiceMOMO> findByCodeMomoAndOperateurServiceMomo(
+            @Param("codeMomo") String codeMomo,
+            @Param("operateurMomo") String operateurMomo,
+            @Param("codeIso") String codeIso);
 
-    // Retrouve la liste de toutes les entités associées à un opérateur
-    @Query("SELECT c FROM CodeServiceMOMO c WHERE LOWER(c.operateurServiceMomo) = LOWER(:operateurServiceMomo)")
-    List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo);
+    // Recherche par codeMomo uniquement avec codeIso
+    @Query("SELECT c FROM CodeServiceMOMO c " +
+            "WHERE c.codeMomo = :codeMomo " +
+            "  AND (:codeIso IS NULL OR c.codeIso = :codeIso) ORDER BY c.creationDate DESC")
+    List<CodeServiceMOMO> findByCodeMomo(
+            @Param("codeMomo") String codeMomo,
+            @Param("codeIso") String codeIso);
 
-    // Vérifie l'existence d'une association spécifique entre un code et un opérateur
-    boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+    // Recherche des services d'un opérateur spécifique avec codeIso
+    @Query("SELECT c FROM CodeServiceMOMO c " +
+            "WHERE LOWER(TRIM(c.operateurServiceMomo)) = LOWER(TRIM(:operateurMomo)) " +
+            "  AND (:codeIso IS NULL OR c.codeIso = :codeIso)" +
+            "ORDER BY c.creationDate DESC")
+    List<CodeServiceMOMO> findByOperateurServiceMomo(
+            @Param("operateurMomo") String operateurMomo,
+            @Param("codeIso") String codeIso);
 
-    @Query("SELECT DISTINCT c.operateurServiceMomo FROM CodeServiceMOMO c")
-    List<String> findDistinctOperateurs();
+    // Vérification d'existence d'un service chez un opérateur avec codeIso
+    @Query("SELECT COUNT(c) > 0 FROM CodeServiceMOMO c " +
+            "WHERE c.codeMomo = :codeMomo " +
+            "  AND c.operateurServiceMomo = :operateurMomo " +
+            "  AND (:codeIso IS NULL OR c.codeIso = :codeIso)")
+    boolean existsByCodeMomoAndOperateurServiceMomo(
+            @Param("codeMomo") String codeMomo,
+            @Param("operateurMomo") String operateurMomo,
+            @Param("codeIso") String codeIso);
+
+    // Liste des opérateurs distincts triés par ordre alphabétique avec codeIso
+    @Query("SELECT DISTINCT c.operateurServiceMomo FROM CodeServiceMOMO c " +
+            "WHERE (:codeIso IS NULL OR c.codeIso = :codeIso) " +
+            "ORDER BY c.operateurServiceMomo ASC")
+    List<String> findDistinctOperateurs(@Param("codeIso") String codeIso);
 }

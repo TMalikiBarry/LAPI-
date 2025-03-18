@@ -21,18 +21,19 @@ public interface CodeServiceMOMOService {
     CodeServiceMOMO findById(Long id);
     List<CodeServiceMOMO> findAll();
 
-    CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+    CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo, String codeIso);
     // Retrouve l'entité par son code unique
-    List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo);
+    List<CodeServiceMOMO> findByCodeMomo(String codeServiceMomo, String codeIso);
 
     // Retrouve la liste de toutes les entités associées à un opérateur
-    List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo);
+    List<CodeServiceMOMO> findByOperateurServiceMomo(String operateurServiceMomo, String codeIso);
 
     Page<CodeServiceMOMO> findByOptionalParamsPaged(
             String codeMomo,
             String operateurServiceMomo,
             String serviceNom,
             String type,
+            String codeIso,
             Date startDate,
             Date endDate,
             Pageable pageable);
@@ -42,10 +43,11 @@ public interface CodeServiceMOMOService {
             String operateurServiceMomo,
             String serviceNom,
             String type,
+            String codeIso,
             Date startDate,
             Date endDate);
     // Vérifie l'existence d'une association spécifique entre un code et un opérateur
-    boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo);
+    boolean existsByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo, String codeISO);
 
-    List<String> findDistinctOperateurs();
+    List<String> findDistinctOperateurs(String codeIso);
 }

@@ -37,6 +37,7 @@ public class CodeServiceMOMORestService {
             @RequestParam(value = "operateur_service_momo", required = false) String operateurServiceMomo,
             @RequestParam(value = "service_nom", required = false) String serviceNom,
             @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "code_iso", required = false) String codeIso,
             @RequestParam(value = "start_date", required = false) String startDateStr,
             @RequestParam(value = "end_date", required = false) String endDateStr,
             @PageableDefault(page = 0, size = 10) Pageable pageable) {
@@ -45,7 +46,7 @@ public class CodeServiceMOMORestService {
         Date endDate = parseDate(endDateStr, false);
 
         Page<CodeServiceMOMO> results = codeServiceMOMOService.findByOptionalParamsPaged(
-                codeMomo, operateurServiceMomo, serviceNom, type, startDate, endDate, pageable);
+                codeMomo, operateurServiceMomo, serviceNom, type, codeIso, startDate, endDate, pageable);
 
         return ResponseEntity.ok(APIResponse.<Page<CodeServiceMOMO>>builder()
                 .code(200)
@@ -60,6 +61,7 @@ public class CodeServiceMOMORestService {
             @RequestParam(value = "operateur_service_momo", required = false) String operateurServiceMomo,
             @RequestParam(value = "service_nom", required = false) String serviceNom,
             @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "code_iso", required = false) String codeIso,
             @RequestParam(value = "start_date", required = false) String startDateStr,
             @RequestParam(value = "end_date", required = false) String endDateStr) {
 
@@ -67,7 +69,7 @@ public class CodeServiceMOMORestService {
         Date endDate = parseDate(endDateStr, false);
 
         List<CodeServiceMOMO> results = codeServiceMOMOService.findByOptionalParams(
-                codeMomo, operateurServiceMomo, serviceNom, type, startDate, endDate);
+                codeMomo, operateurServiceMomo, serviceNom, type, codeIso, startDate, endDate);
 
         return ResponseEntity.ok(APIResponse.<List<CodeServiceMOMO>>builder()
                 .code(200)
@@ -149,9 +151,10 @@ public class CodeServiceMOMORestService {
     @GetMapping(value = "/search", produces = "application/json")
     public ResponseEntity<APIResponse<CodeServiceMOMO>> searchByCodeAndOperator(
             @RequestParam("codeServiceMomo") String codeServiceMomo,
-            @RequestParam("operateurServiceMomo") String operateurServiceMomo) {
+            @RequestParam("operateurServiceMomo") String operateurServiceMomo,
+            @RequestParam(value = "code_iso", required = false) String codeIso) {
         CodeServiceMOMO result = codeServiceMOMOService
-                .findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+                .findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo, codeIso);
 
         return ResponseEntity.ok(APIResponse.<CodeServiceMOMO>builder()
                 .code(200)
@@ -164,8 +167,9 @@ public class CodeServiceMOMORestService {
     @GetMapping(value = "/exists", produces = "application/json")
     public ResponseEntity<APIResponse<Boolean>> existsByCodeAndOperator(
             @RequestParam("codeServiceMomo") String codeServiceMomo,
-            @RequestParam("operateurServiceMomo") String operateurServiceMomo) {
-        boolean exists = codeServiceMOMOService.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo);
+            @RequestParam("operateurServiceMomo") String operateurServiceMomo,
+            @RequestParam(value = "code_iso", required = false) String codeIso) {
+        boolean exists = codeServiceMOMOService.existsByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo, codeIso);
         return ResponseEntity.ok(APIResponse.<Boolean>builder()
                 .code(200)
                 .reason("SUCCESS")
@@ -174,8 +178,10 @@ public class CodeServiceMOMORestService {
     }
 
     @GetMapping("/operateurs")
-    public ResponseEntity<APIResponse<List<String>>> getDistinctOperateurs() {
-        List<String> operateurs = codeServiceMOMOService.findDistinctOperateurs();
+    public ResponseEntity<APIResponse<List<String>>> getDistinctOperateurs(
+            @RequestParam(value = "code_iso", required = false) String codeIso
+    ) {
+        List<String> operateurs = codeServiceMOMOService.findDistinctOperateurs(codeIso);
 
         APIResponse<List<String>> response = APIResponse.<List<String>>builder()
                 .code(HttpStatus.OK.value())
