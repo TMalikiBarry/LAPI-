@@ -135,7 +135,11 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		}
 		if (sortBy != null && sortDir != null) {
 			sqlQuery += " ORDER BY " + " " + sortBy + " " + sortDir;
+		} else {
+			sqlQuery += " ORDER BY t.date DESC";
 		}
+
+
 		Query query = em.createQuery(sqlQuery, LonaciTrx.class);
 		Query aggQuery = em.createNativeQuery(aggSqlQuery);
 
