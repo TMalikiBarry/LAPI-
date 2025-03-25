@@ -26,4 +26,5 @@ public class LonaciTrxDTO implements Serializable {
     private String country;
     // Nouveau champ provenant de CodeServiceMOMO
     private String operateurServiceMomo;
+    private String intouchCommission;
 }
