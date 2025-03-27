@@ -34,6 +34,8 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	EntityManager em;
 
 	private static final String CI_COUNTRY_CODE = "CI";
+	private static final String DEPOT_MOMO_TYPE_TRX = "depot_momo";
+	private static final String RETRAIT_MOMO_TYPE_TRX = "retrait";
 
 	private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
 
@@ -105,23 +107,39 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	@Override
 	public PaginationResponse<List<LonaciTrxDTO>> customFindByDateBetweenAndOperateurIDAndTypeTransaction(
             String country, Date startDate, Date endDate, String operatorId, String typeTransaction, String codeService,
-			String operateurMomo, Double montant, String sortBy, String sortDir, int pageSize, int page
+			String momoOperator, Double amount, String sortBy, String sortDir, int pageSize, int page
 	) {
-		String sqlQuery = "SELECT t FROM LonaciTrx t WHERE t.date BETWEEN :startDate AND :endDate ";
-		String aggSqlQuery = "SELECT COUNT(*), sum(t.montant) from lonaci_trx t WHERE t.date BETWEEN :startDate AND :endDate ";
+		String sqlQuery = "SELECT t FROM LonaciTrx t ";
+		String aggSqlQuery = "SELECT COUNT(*), sum(t.montant) from lonaci_trx t ";
+
+
 
 		// Si le filtre opérateur est fourni, on recherche les codes services associés à cet opérateur
-		List<String> codeServicesForOperator = null;
-		if (StringUtils.hasText(operateurMomo)) {
-			List<CodeServiceMOMO> codeServiceList = codeServiceRepository.findByOperateurServiceMomo(operateurMomo, country);
-			if (!codeServiceList.isEmpty()) {
-				codeServicesForOperator = codeServiceList.stream()
-						.map(CodeServiceMOMO::getCodeMomo)
-						.collect(Collectors.toList());
-				// Filtrer les transactions dont le codeService figure dans la liste trouvée
-				sqlQuery += " AND t.codeService IN :codeServices";
-				aggSqlQuery += " AND t.code_service IN (:codeServices)";
-			}
+//		List<String> codeServicesForOperator = null;
+//		if (StringUtils.hasText(operateurMomo)) {
+//			List<CodeServiceMOMO> codeServiceList = codeServiceRepository.findByOperateurServiceMomo(operateurMomo, country);
+//			if (!codeServiceList.isEmpty()) {
+//				codeServicesForOperator = codeServiceList.stream()
+//						.map(CodeServiceMOMO::getCodeMomo)
+//						.collect(Collectors.toList());
+//				// Filtrer les transactions dont le codeService figure dans la liste trouvée
+//				sqlQuery += " AND t.codeService IN :codeServices";
+//				aggSqlQuery += " AND t.code_service IN (:codeServices)";
+//			}
+//		}
+
+		if (StringUtils.hasText(momoOperator)) {
+			sqlQuery += " JOIN CodeServiceMOMO c WITH t.codeService = c.codeMomo ";
+			aggSqlQuery += " JOIN code_service_momo c ON t.code_service = c.code_momo ";
+		}
+
+		sqlQuery += " WHERE t.date BETWEEN :startDate AND :endDate ";
+		aggSqlQuery += " WHERE t.date BETWEEN :startDate AND :endDate ";
+
+		if (StringUtils.hasText(momoOperator)) {
+			// Filtre sur l'opérateur depuis CodeServiceMOMO
+			sqlQuery += " AND LOWER(c.operateurServiceMomo) = LOWER(:operateurMomo) ";
+			aggSqlQuery += " AND LOWER(c.operateur_service_momo) = LOWER(:operateurMomo) ";
 		}
 
 		if (StringUtils.hasText(operatorId)) {
@@ -134,7 +152,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			aggSqlQuery += " AND t.code_service = :codeService";
 		}
 
-		if (montant != null && montant != 0D) {
+		if (amount != null && amount != 0D) {
 			sqlQuery += " AND t.montant = :montant";
 			aggSqlQuery += " AND t.montant = :montant";
 		}
@@ -143,7 +161,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			sqlQuery += " AND t.typeTransaction = :typeTransaction";
 			aggSqlQuery += " AND t.type_transaction = :typeTransaction";
 		}
-		if (country != null) {
+		if (StringUtils.hasText(country)) {
 			sqlQuery += " AND t.country = :country";
 			aggSqlQuery += " AND t.country = :country";
 		}
@@ -175,17 +193,22 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			aggQuery.setParameter("codeService", codeService);
 		}
 
-		if (montant != null && montant != 0D) {
-			query.setParameter("montant", montant);
-			aggQuery.setParameter("montant", montant);
+		if (amount != null && amount != 0D) {
+			query.setParameter("montant", amount);
+			aggQuery.setParameter("montant", amount);
 		}
 
-		if (codeServicesForOperator != null) {
+		if (StringUtils.hasText(momoOperator)) {
+			query.setParameter("operateurMomo", momoOperator);
+			aggQuery.setParameter("operateurMomo", momoOperator);
+		}
+
+/*		if (codeServicesForOperator != null) {
 			query.setParameter("codeServices", codeServicesForOperator);
 			aggQuery.setParameter("codeServices", codeServicesForOperator);
-		}
+		}*/
 
-		if (country != null) {
+		if (StringUtils.hasText(country)) {
 			query.setParameter("country", country);
 			aggQuery.setParameter("country", country);
 		}
@@ -255,36 +278,32 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		return dto;
 	}
 
-	public String computeIntouchCommission(LonaciTrx dto) {
+	public String computeIntouchCommission(LonaciTrx trx) {
 		double commissionValue = 0;
 
-		ComputeParameter com_param = computeParameterService.getParameterByOperatorAndCountry(
-				dto.getOperateurID(), dto.getCountry()
-		).get(0);
+		String typeTx = (trx.getTypeTransaction() != null) ? trx.getTypeTransaction().toLowerCase() : "";
 
-		if (com_param != null) {
-			if (dto.getCodeService() != null) {
-				String csLower = dto.getCodeService().toLowerCase();
-				if (csLower.contains("cashin")) {
-					commissionValue = dto.getMontant() * com_param.getCashinFees();
-				} else if (csLower.contains("payment") || csLower.contains("paiement")) {
-					commissionValue = dto.getMontant() * com_param.getPaymentFees();
-				}
+		// Vérifier que le type est soit "depot_momo" soit "retrait"
+		if (DEPOT_MOMO_TYPE_TRX.equals(typeTx) || RETRAIT_MOMO_TYPE_TRX.equals(typeTx)) {
+			// Récupérer le ComputeParameter pour l'opérateur et le pays
+			List<ComputeParameter> paramList = computeParameterService.getParameterByOperatorAndCountry(trx.getOperateurID(), trx.getCountry());
+			ComputeParameter param = (paramList != null && !paramList.isEmpty()) ? paramList.get(0) : null;
+
+			if (param != null) {
+				// Si type est "depot_momo", appliquer paymentFees, sinon cashinFees pour "retrait"
+				commissionValue = DEPOT_MOMO_TYPE_TRX.equals(typeTx)
+						? trx.getMontant() * param.getPaymentFees()
+						: trx.getMontant() * param.getCashinFees();
+			} else if (CI_COUNTRY_CODE.equals(trx.getCountry())) {
+				// Taux par défaut pour la Côte d'Ivoire
+				commissionValue = trx.getMontant() * 0.04;
+			} else {
+				log.error("No compute parameter found for operator {} and country {}", trx.getOperateurID(), trx.getCountry());
 			}
-		} else if (CI_COUNTRY_CODE.equals(dto.getCountry())) {
-			commissionValue = dto.getMontant() * 0.04;
-		} else {
-			log.error(String.format("No compute parameter found for %s, country %s",
-					dto.getOperateurID(), dto.getCountry()));
 		}
 
-
-		// Si commissionValue est 0, retourner "0", sinon formater le nombre avec des espaces.
-		if (commissionValue == 0) {
-			return "0";
-		} else {
-			return this.formatLabelAmount(commissionValue); // Par exemple, formate 1000 en "1 000"
-		}
+		// Si commissionValue est 0, retourner " -- ", sinon formater le montant.
+		return commissionValue == 0 ? " -- " : this.formatLabelAmount(commissionValue);
 	}
 
 

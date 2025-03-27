@@ -1,6 +1,7 @@
 package sn.intouch.gu.lonaciapi.ejb.parameter.services;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.util.StringUtils;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.ResourceAlreadyExistsException;
 import sn.intouch.gu.lonaciapi.ejb.parameter.entities.ComputeParameter;
@@ -77,8 +78,7 @@ public class ComputeParameterServiceBean implements ComputeParameterService {
     @Override
     public ComputeParameter saveComputeParameter(ComputeParameter parameter) {
         // Vérification des champs obligatoires
-        if (parameter.getCountry() == null || parameter.getCountry().trim().isEmpty()
-                || parameter.getOperator() == null || parameter.getOperator().trim().isEmpty()
+        if (!StringUtils.hasText(parameter.getCountry()) || !StringUtils.hasText(parameter.getOperator())
                 || parameter.getCashinFees() == null || parameter.getPaymentFees() == null) {
             throw new BadRequestException("Les champs country, operator, cashinFees et paymentFees sont obligatoires.");
         }
@@ -107,8 +107,7 @@ public class ComputeParameterServiceBean implements ComputeParameterService {
             throw new BadRequestException("L'ID est requis pour la mise à jour.");
         }
         // Vérification des champs obligatoires
-        if (parameter.getCountry() == null || parameter.getCountry().trim().isEmpty()
-                || parameter.getOperator() == null || parameter.getOperator().trim().isEmpty()
+        if (!StringUtils.hasText(parameter.getCountry()) || !StringUtils.hasText(parameter.getOperator())
                 || parameter.getCashinFees() == null || parameter.getPaymentFees() == null) {
             throw new BadRequestException("Les champs country, operator, cashinFees et paymentFees sont obligatoires.");
         }

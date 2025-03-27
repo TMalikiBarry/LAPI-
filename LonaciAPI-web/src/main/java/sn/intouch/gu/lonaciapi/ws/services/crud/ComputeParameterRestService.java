@@ -69,17 +69,7 @@ public class ComputeParameterRestService {
                 .build());
     }
 
-    // Récupérer tous les ComputeParameter
-    /*@GetMapping
-    public ResponseEntity<APIResponse<List<ComputeParameter>>> getAllParameters() {
-        List<ComputeParameter> list = computeParameterService.getParameterByOperatorAndCountry(null, null);
-        return ResponseEntity.ok(APIResponse.<List<ComputeParameter>>builder()
-                .code(HttpStatus.OK.value())
-                .reason("SUCCESS")
-                .data(list)
-                .build());
-    }
-*/
+
     // Création d'un nouveau ComputeParameter
     @PostMapping(consumes = "application/json")
     public ResponseEntity<APIResponse<ComputeParameter>> createParameter(@RequestBody ComputeParameter cp) {
