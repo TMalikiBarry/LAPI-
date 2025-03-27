@@ -51,7 +51,7 @@ public class ComputeRevenueSchedule {
 
     public void compute(Date startDate, Date endDate) {
         log.info("Running JOB for computing revenue at : START DATE " + startDate + " AND END DATE : " + endDate);
-        Iterable<Operator> operators = operatorService.getAll();
+        Iterable<Operator> operators = operatorService.getAll(null);
         for (Operator operator : operators) {
             computeForOperator(startDate, endDate, operator);
         }
