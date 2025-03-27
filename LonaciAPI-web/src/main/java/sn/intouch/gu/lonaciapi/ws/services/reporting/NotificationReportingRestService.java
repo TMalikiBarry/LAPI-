@@ -2,11 +2,10 @@ package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.InvalidDateException;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -46,7 +45,8 @@ public class NotificationReportingRestService {
             @RequestParam(value = "country", required = false) String country
 
     ) {
-
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         validatePageSize(size);
 
         Date startDate = parseDate(startDateStr, "Format de date invalide pour start_date.");
