@@ -38,7 +38,6 @@ public class ParameterServiceBean implements ParameterService {
             parameter = (Parameter) query.getSingleResult();
         } catch (Exception e) {
             System.out.println("Pas de parametre de code " + code);
-            e.printStackTrace();
         }
         return parameter;
     }

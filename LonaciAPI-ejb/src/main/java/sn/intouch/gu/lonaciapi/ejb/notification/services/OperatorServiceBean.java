@@ -9,6 +9,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.Set;
 
 @Stateless
 public class OperatorServiceBean implements OperatorService {
@@ -49,12 +50,18 @@ public class OperatorServiceBean implements OperatorService {
 	}
 
 	@Override
-	public Iterable<Operator> getAll() {
+	public Iterable<Operator> getAll(Set<String> operators) {
+		if (operators != null) {
+			return operatorRepository.findByOperatorIdInAndSupprime(operators, false);
+		}
 		return operatorRepository.findBySupprime(false);
 	}
 
 	@Override
-	public Iterable<Operator> findByCountry(String country) {
+	public Iterable<Operator> findByCountry(String country, Set<String> operators) {
+		if (operators != null) {
+			return operatorRepository.findByCountryAndOperatorIdInAndSupprime(country, operators, false);
+		}
 		return operatorRepository.findByCountry(country);
 	}
 }
