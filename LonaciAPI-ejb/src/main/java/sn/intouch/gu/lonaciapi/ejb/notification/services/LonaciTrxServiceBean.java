@@ -1,18 +1,11 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
-import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.util.StringUtils;
-import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
-import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
 import sn.intouch.gu.lonaciapi.ejb.notification.models.LonaciTrxDTO;
 import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
-import sn.intouch.gu.lonaciapi.ejb.notification.repositories.CodeServiceMOMORepository;
-import sn.intouch.gu.lonaciapi.ejb.parameter.services.ComputeParameterService;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -35,7 +28,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	private static final String DEPOT_MOMO_TYPE_TRX = "depot_momo";
 	private static final String RETRAIT_MOMO_TYPE_TRX = "retrait";
 
-	private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
+	/*private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
 
 	private CodeServiceMOMORepository codeServiceRepository;
 
@@ -43,7 +36,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	private void init() {
 		RepositoryFactorySupport factorySupport = new JpaRepositoryFactory(em);
 		this.codeServiceRepository = factorySupport.getRepository(CodeServiceMOMORepository.class);
-	}
+	}*/
 
 	public LonaciTrx getTransactionById(Long id) {
 		LonaciTrx transaction = em.find(LonaciTrx.class, id);
