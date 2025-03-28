@@ -34,21 +34,21 @@ public class NotificationReportingRestService {
             @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE, required = false) int size,
             @RequestParam(value = "sortBy", defaultValue = AppConstants.DEFAULT_SORT_BY, required = false) String sortBy,
             @RequestParam(value = "sortDir", defaultValue = AppConstants.DEFAULT_SORT_DIRECTION, required = false) String sortDir,
-            @RequestParam(value = "start_date") String startDateStr,
-            @RequestParam(value = "end_date") String endDateStr,
+            @RequestParam(value = "start_date") Long startDateLong,
+            @RequestParam(value = "end_date") Long endDateLong,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "code_service", required = false) String codeService,
             @RequestParam(value = "operateur_momo", required = false) String operateurMomo,
             @RequestParam(value = "montant", required = false) Double montant,
-            @RequestParam(value = "country", required = false) String country
+            @RequestParam(value = "country", defaultValue = AppConstants.CI_COUNTRY_CODE) String country
 
     ) {
 
         validatePageSize(size);
 
-        Date startDate = parseDate(startDateStr, "Format de date invalide pour start_date.");
-        Date endDate = parseDate(endDateStr, "Format de date invalide pour end_date.");
+        Date startDate = parseDate(startDateLong, "Format de date invalide pour start_date.");
+        Date endDate = parseDate(endDateLong, "Format de date invalide pour end_date.");
 
         validateDateRange(startDate, endDate);
 
@@ -68,9 +68,9 @@ public class NotificationReportingRestService {
                 " doit pas dépasser %d !!!", MAX_SIZE));
     }
 
-    private Date parseDate(String dateStr, String errorMessage) {
+    private Date parseDate(Long dateLong, String errorMessage) {
         try {
-            return new Date(Long.parseLong(dateStr));
+            return new Date(dateLong);
         } catch (NumberFormatException e) {
             throw new InvalidDateException(errorMessage);
         }
