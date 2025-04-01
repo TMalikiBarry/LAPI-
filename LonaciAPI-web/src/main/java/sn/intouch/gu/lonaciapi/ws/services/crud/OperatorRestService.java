@@ -2,7 +2,10 @@ package sn.intouch.gu.lonaciapi.ws.services.crud;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import sn.intouch.gu.lonaciapi.config.BadRequestException;
+import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
 import sn.intouch.gu.lonaciapi.ejb.dto.OperatorDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
@@ -12,6 +15,7 @@ import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class OperatorRestService {
@@ -65,6 +69,26 @@ public class OperatorRestService {
                 .build());
     }
 
+    // Récupérer une liste d'opérateurs par leur identifiant
+    @PostMapping(value = "/api/v2/operator/some_ops", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<APIResponse<List<OperatorDTO>>> getOperatorsByIds(@RequestBody List<String> operatorIds) {
+        if (operatorIds == null || operatorIds.isEmpty()) {
+            throw new BadRequestException("Operator IDs list is empty");
+        }
+        List<Operator> operators = operatorService.findByOperatorIds(operatorIds);
+        if (operators.isEmpty()) {
+            throw new EntityNotFoundCustomException("No operators found");
+        }
+        List<OperatorDTO> dtoList = operators.stream()
+                .map(Operator::toDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
+                .code(HttpStatus.OK.value())
+                .reason("SUCCESS")
+                .data(dtoList)
+                .build());
+    }
     @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
     public ResponseEntity<APIResponse> updateOperator(@RequestBody OperatorDTO dto, @PathVariable String id) {
         Operator operator = operatorService.findByOperatorID(id);
@@ -115,12 +139,12 @@ public class OperatorRestService {
     }
 
     private void transposeUpdate(Operator operator, OperatorDTO dto) {
-        if (dto.getIdentifier() != null) operator.setOperatorId(dto.getIdentifier());
-        if (dto.getLabel() != null) operator.setOperatorLabel(dto.getLabel());
-        if (dto.getToken() != null) operator.setOperatorToken(dto.getToken());
-        if (dto.getMerchantCode() != null) operator.setMerchantCode(dto.getMerchantCode());
-        if (dto.getNetworkCode() != null) operator.setNetworkCode(dto.getNetworkCode());
-        if (dto.getStatus() != null) operator.setStatut(dto.getStatus());
-        if (dto.getCountry() != null ) operator.setCountry(dto.getCountry());
+        if (StringUtils.hasText(dto.getIdentifier() )) operator.setOperatorId(dto.getIdentifier());
+        if (StringUtils.hasText(dto.getLabel() )) operator.setOperatorLabel(dto.getLabel());
+        if (StringUtils.hasText(dto.getToken() )) operator.setOperatorToken(dto.getToken());
+        if (StringUtils.hasText(dto.getMerchantCode() )) operator.setMerchantCode(dto.getMerchantCode());
+        if (StringUtils.hasText(dto.getNetworkCode() )) operator.setNetworkCode(dto.getNetworkCode());
+        if (StringUtils.hasText(dto.getStatus() )) operator.setStatut(dto.getStatus());
+        if (StringUtils.hasText(dto.getCountry() ) ) operator.setCountry(dto.getCountry());
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 import org.springframework.stereotype.Service;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -12,4 +13,6 @@ public interface OperatorRepository extends JpaRepository<Operator, Long>, Query
     Optional<Operator> findByOperatorIdAndSupprime(String operatorID, Boolean deleted);
     Iterable<Operator> findBySupprime(Boolean deleted);
     Iterable<Operator> findByCountry(String country);
+
+    List<Operator> findByOperatorIdIn(List<String> operatorIds);
 }

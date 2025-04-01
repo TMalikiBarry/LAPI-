@@ -10,6 +10,7 @@ import javax.annotation.PostConstruct;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.List;
 
 @Stateless
 public class OperatorServiceBean implements OperatorService {
@@ -42,6 +43,11 @@ public class OperatorServiceBean implements OperatorService {
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	@Override
+	public List<Operator> findByOperatorIds(List<String> operatorIds) {
+		return operatorRepository.findByOperatorIdIn(operatorIds);
 	}
 
 	@Override
