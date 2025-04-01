@@ -4,6 +4,7 @@ import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 
 import javax.ejb.Local;
 import java.util.List;
+import java.util.Set;
 
 @Local
 public interface OperatorService {
@@ -16,6 +17,6 @@ public interface OperatorService {
 	Operator save(Operator operator);
 	Operator delete(Operator operator);
 
-	Iterable<Operator> getAll();
-	Iterable<Operator> findByCountry(String country);
+    Iterable<Operator> getAll(Set<String> operators);
+	Iterable<Operator> findByCountry(String country, Set<String> operators);
 }

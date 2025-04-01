@@ -1,20 +1,24 @@
 package sn.intouch.gu.lonaciapi.ws.services.crud;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
+import sn.intouch.gu.lonaciapi.ejb.authutils.KCUser;
 import sn.intouch.gu.lonaciapi.ejb.dto.OperatorDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
+import sn.intouch.gu.lonaciapi.ws.utils.AuthUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -23,7 +27,10 @@ public class OperatorRestService {
             .lookUpEJB(EJBRegistry.OperatorServiceBean);
 
     @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<APIResponse> getOperator(@PathVariable String id) {
+    public ResponseEntity<APIResponse> getOperator(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
+                                                   @PathVariable String id) {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, id))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Operator operator = operatorService.findByOperatorID(id);
         if (operator != null)
             return ResponseEntity.ok(APIResponse.<OperatorDTO>builder()
@@ -90,7 +97,10 @@ public class OperatorRestService {
                 .build());
     }
     @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.PATCH, consumes = "application/json", produces = "application/json")
-    public ResponseEntity<APIResponse> updateOperator(@RequestBody OperatorDTO dto, @PathVariable String id) {
+    public ResponseEntity<APIResponse> updateOperator(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
+                                                      @RequestBody OperatorDTO dto, @PathVariable String id) {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, id))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Operator operator = operatorService.findByOperatorID(id);
         if (operator == null)
             return new ResponseEntity<>(APIResponse.<OperatorDTO>builder()
@@ -108,7 +118,10 @@ public class OperatorRestService {
     }
 
     @RequestMapping(value = "/api/v2/operator/{id}", method = RequestMethod.DELETE, consumes = "application/json", produces = "application/json")
-    public ResponseEntity<APIResponse> deleteOperator(@PathVariable String id ) {
+    public ResponseEntity<APIResponse> deleteOperator(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
+                                                      @PathVariable String id) {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, id))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Operator operator = operatorService.findByOperatorID(id);
         if (operator == null)
             return new ResponseEntity<>(APIResponse.<OperatorDTO>builder()
@@ -124,12 +137,21 @@ public class OperatorRestService {
     }
 
     @RequestMapping(value = "/api/v2/operator", method = RequestMethod.GET, consumes = "application/json", produces = "application/json")
-    public ResponseEntity<APIResponse> getOperatorByCountry(@RequestParam(required = false) String country){
+    public ResponseEntity<APIResponse> getOperatorByCountry(@RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
+                                                            @RequestParam(required = false) String country){
+        KCUser kcUser = AuthUtils.getUserFromToken(authHeader);
+        Set<String> permittedOperators = null;
+        if (AuthUtils.isBookMaker(kcUser)) {
+            if (kcUser.getOperators() == null || kcUser.getOperators().isEmpty())
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            permittedOperators = kcUser.getOperators();
+        }
+
         Iterable<Operator> operators;
         if(country == null){
-            operators = operatorService.getAll();
+            operators = operatorService.getAll(permittedOperators);
         }else {
-            operators = operatorService.findByCountry(country);
+            operators = operatorService.findByCountry(country, permittedOperators);
         }
         return ResponseEntity.ok(APIResponse.<List<OperatorDTO>>builder()
                 .code(200)
@@ -139,7 +161,7 @@ public class OperatorRestService {
     }
 
     private void transposeUpdate(Operator operator, OperatorDTO dto) {
-        if (StringUtils.hasText(dto.getIdentifier() )) operator.setOperatorId(dto.getIdentifier());
+        // if (dto.getIdentifier() != null) operator.setOperatorId(dto.getIdentifier());
         if (StringUtils.hasText(dto.getLabel() )) operator.setOperatorLabel(dto.getLabel());
         if (StringUtils.hasText(dto.getToken() )) operator.setOperatorToken(dto.getToken());
         if (StringUtils.hasText(dto.getMerchantCode() )) operator.setMerchantCode(dto.getMerchantCode());

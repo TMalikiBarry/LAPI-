@@ -1,12 +1,10 @@
 package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -16,6 +14,7 @@ import sn.intouch.gu.lonaciapi.ws.dto.CategorisationResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.SubHeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
+import sn.intouch.gu.lonaciapi.ws.utils.AuthUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -28,6 +27,7 @@ public class AggregationReportingRestServiceV2 {
 
     @RequestMapping(value = {"/api/v2/aggregation/curve"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<List<Map<String, String>>>> curve(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
@@ -35,6 +35,8 @@ public class AggregationReportingRestServiceV2 {
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate;
         Date endDate;
         try {
@@ -56,11 +58,13 @@ public class AggregationReportingRestServiceV2 {
 
     @RequestMapping(value = {"/api/v2/aggregation/header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<CategorisationResponse<TimedResponse<Map<String, String>>>>> header(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
-        
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         CategorisationResponse<TimedResponse<Map<String, String>>> response = CategorisationResponse.<TimedResponse<Map<String, String>>>builder()
                 .payin(getHeaderResponse(operator, type, "PAY_IN", country))
                 .payout(getHeaderResponse(operator, type, "PAY_OUT", country))
@@ -84,12 +88,15 @@ public class AggregationReportingRestServiceV2 {
 
     @RequestMapping(value = {"/api/v2/aggregation/sub-header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<CategorisationResponse<SubHeaderResponse>>> subHeaderV2(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate;
         Date endDate;
         try {
@@ -135,10 +142,13 @@ public class AggregationReportingRestServiceV2 {
 
     @RequestMapping(value = {"/api/v2/aggregation/trend"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<CategorisationResponse<TimedResponse<List<Map<String, String>>>>>> trend(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         CategorisationResponse<TimedResponse<List<Map<String, String>>>> response = CategorisationResponse.<TimedResponse<List<Map<String, String>>>>builder()
                 .payin(getTrendResponse(operator, type, "PAY_IN", country))
                 .payout(getTrendResponse(operator, type, "PAY_OUT", country))
@@ -174,6 +184,7 @@ public class AggregationReportingRestServiceV2 {
      */
     @RequestMapping(value = {"/api/v2/aggregation/report"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<List<Map<String, String>>>> report(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
@@ -181,6 +192,8 @@ public class AggregationReportingRestServiceV2 {
             @RequestParam(value = "category", required = false) String category,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate;
         Date endDate;
         try {

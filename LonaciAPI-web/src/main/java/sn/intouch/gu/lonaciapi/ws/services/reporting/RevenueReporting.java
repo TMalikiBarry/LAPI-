@@ -3,12 +3,10 @@ package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 import com.google.gson.Gson;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.dto.RevenueDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -23,6 +21,7 @@ import sn.intouch.gu.lonaciapi.ws.dto.RevenueReformattedResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.RevenueResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
+import sn.intouch.gu.lonaciapi.ws.utils.AuthUtils;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -37,11 +36,14 @@ public class RevenueReporting {
 
     @RequestMapping(value = {"/api/v1/aggregation/revenue", "/api/v2/aggregation/revenue"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<RevenueResponse>> revenue(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate;
         Date endDate;
         try {
@@ -80,9 +82,12 @@ public class RevenueReporting {
 
     @RequestMapping(value = {"/api/v2/aggregation/revenue-timed"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<RevenueReformattedResponse>> revenueTimed(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate, endDate;
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
@@ -194,11 +199,14 @@ public class RevenueReporting {
 
     @RequestMapping(value = {"/api/v1/aggregation/revenue-curve","/api/v2/aggregation/revenue-curve"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<List<RevenueDTO>>> revenueCurve(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate;
         Date endDate;
         try {

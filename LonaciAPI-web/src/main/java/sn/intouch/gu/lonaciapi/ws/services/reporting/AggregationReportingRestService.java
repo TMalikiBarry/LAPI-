@@ -1,12 +1,10 @@
 package sn.intouch.gu.lonaciapi.ws.services.reporting;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.services.BigQueryService;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -15,6 +13,7 @@ import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
 import sn.intouch.gu.lonaciapi.ws.dto.HeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.SubHeaderResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
+import sn.intouch.gu.lonaciapi.ws.utils.AuthUtils;
 
 import java.util.Date;
 import java.util.Map;
@@ -27,11 +26,13 @@ public class AggregationReportingRestService {
 
     @RequestMapping(value = {"/api/v1/aggregation/header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<HeaderResponse>> header(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
-
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS",
                 HeaderResponse.builder()
                         .day(bigQueryService.getSumBetweenDates(DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY), DateUtil.getEndOfDay(), operator, type, country))
@@ -43,12 +44,15 @@ public class AggregationReportingRestService {
 
     @RequestMapping(value = {"/api/v1/aggregation/sub-header"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<SubHeaderResponse>> subHeader(
+            @RequestHeader(value = HttpHeaders.AUTHORIZATION) String authHeader,
             @RequestParam(value = "start_date") String start_date,
             @RequestParam(value = "end_date") String end_date,
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "type", required = false) String type,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Date startDate;
         Date endDate;
         try {
