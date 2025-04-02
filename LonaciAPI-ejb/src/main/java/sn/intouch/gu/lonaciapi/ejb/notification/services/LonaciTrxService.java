@@ -1,10 +1,12 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
+import sn.intouch.gu.lonaciapi.ejb.dto.IntouchSummaryDTO;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
 import sn.intouch.gu.lonaciapi.ejb.notification.models.PaginationResponse;
 
 import javax.ejb.Local;
 import java.util.Date;
+import java.util.List;
 
 @Local
 public interface LonaciTrxService {
@@ -26,4 +28,6 @@ public interface LonaciTrxService {
 																			   String sortBy, String sortDir,
 																			   int pageSize, int page);
 
+	PaginationResponse<List<IntouchSummaryDTO>> getGroupedIntouchSummaryPaginated(
+			Date startDate, Date endDate, int page, int pageSize);
 }

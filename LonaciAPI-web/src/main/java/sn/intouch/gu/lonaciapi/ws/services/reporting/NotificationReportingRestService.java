@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.InvalidDateException;
+import sn.intouch.gu.lonaciapi.ejb.dto.IntouchSummaryDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrx;
@@ -49,8 +50,8 @@ public class NotificationReportingRestService {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         validatePageSize(size);
 
-        Date startDate = parseDate(startDateLong, "Format de date invalide pour start_date.");
-        Date endDate = parseDate(endDateLong, "Format de date invalide pour end_date.");
+        Date startDate = parseDate(startDateLong, "Invalid date format for start_date.");
+        Date endDate = parseDate(endDateLong, "Invalid date format for end_date.");
 
         validateDateRange(startDate, endDate);
 
@@ -60,14 +61,40 @@ public class NotificationReportingRestService {
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", notifications));
     }
 
+    @RequestMapping(value = {"/api/v1/intouch-summary", "/api/v2/intouch-summary"}, method = RequestMethod.GET,
+            consumes = "application/json", produces = "application/json")
+    public ResponseEntity<APIResponse<PaginationResponse<List<IntouchSummaryDTO>>>> getIntouchSummaryPaginated(
+            @RequestParam("start_date") Long startDateLong,
+            @RequestParam("end_date") Long endDateLong,
+            @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
+            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int pageSize) {
+
+//        Date startDate = new Date(startDateLong);
+//        Date endDate = new Date(endDateLong);
+        validatePageSize(pageSize);
+
+        Date startDate = parseDate(startDateLong, "Invalid date format for start_date.");
+        Date endDate = parseDate(endDateLong, "Invalid date format for end_date.");
+
+        validateDateRange(startDate, endDate);
+
+        PaginationResponse<List<IntouchSummaryDTO>> response = lonaciNotifService
+                .getGroupedIntouchSummaryPaginated(startDate, endDate, page, pageSize);
+        return ResponseEntity.ok(APIResponse.<PaginationResponse<List<IntouchSummaryDTO>>>builder()
+                .code(HttpStatus.OK.value())
+                .reason("SUCCESS")
+                .data(response)
+                .build());
+    }
+
     private void validatePageSize(int size) {
         int MAX_SIZE = AppConstants.MAX_PAGE_SIZE;
         Parameter param = parameterService.getParameterByCode("PARAM_MAX_PAGE_SIZE_AUTHORIZED");
 
         if (param != null && param.getPrmValue() != 0) MAX_SIZE = param.getPrmValue();
 
-        if (size > MAX_SIZE) throw new BadRequestException(String.format("La taille de la page ( param size )  ne" +
-                " doit pas dépasser %d !!!", MAX_SIZE));
+        if (size > MAX_SIZE)
+            throw new BadRequestException(String.format("Page size (param size) must not exceed %d !!!", MAX_SIZE));
     }
 
     private Date parseDate(Long dateLong, String errorMessage) {
@@ -82,16 +109,16 @@ public class NotificationReportingRestService {
         long maxInterval = getDateIntervalInMillis();
         long maxIntervalInDays = maxInterval / (24 * 3600 * 1000);
         if (endDate.before(startDate)) {
-            throw new InvalidDateException("La date de fin ne peut pas être antérieure à la date de début.");
+            throw new InvalidDateException("End date cannot be before start date.");
         }
 
-        log.warn(String.format("#############  On a comme intervalle %d", maxIntervalInDays));
+//        log.warn(String.format("#############  On a comme intervalle %d", maxIntervalInDays));
         if (endDate.getTime() - startDate.getTime() > maxInterval) {
             long providedInterval = (endDate.getTime() - startDate.getTime()) / (24 * 3600 * 1000); // Convertir en jours
 
             throw new InvalidDateException(
-                    "L'intervalle entre les deux dates est de " + providedInterval +
-                            " jours, ce qui dépasse la limite autorisée de " + maxIntervalInDays + " jours."
+                    "The interval between the two dates is " + providedInterval +
+                            " days, which exceeds the allowed limit of " + maxIntervalInDays + " days."
             );
         }
     }
@@ -99,7 +126,7 @@ public class NotificationReportingRestService {
     private Long getDateIntervalInMillis() {
         Parameter parameter = parameterService.getParameterByCode("PARAM_TWO_DATES_INTERVAL_IN_DAYS");
 
-        log.warn("########## " + parameter);
+//        log.warn("########## " + parameter);
         if (parameter != null && parameter.getPrmValue() != 0) {
             return parameter.getPrmValue() * 24 * 3600 * 1000L;
         }
