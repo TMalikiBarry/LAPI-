@@ -1,6 +1,7 @@
 package sn.intouch.gu.lonaciapi.ws.services.exposed;
 
 import com.google.gson.Gson;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -8,11 +9,11 @@ import org.springframework.web.bind.annotation.RestController;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.LonaciTrxTemp;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.TypeTrx;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxTempService;
-import sn.intouch.gu.lonaciapi.ejb.notification.services.TypeTrxService;
-import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.TypeTrxService;
 import sn.intouch.gu.lonaciapi.ejb.utils.TokenGenerator;
 import sn.intouch.gu.lonaciapi.ws.models.NotificationExchange;
 import sn.intouch.gu.lonaciapi.ws.models.TransactionNotifResponse;
@@ -89,9 +90,9 @@ public class SendNotificationRestService {
 
     private boolean areFieldsOk(NotificationExchange exchange) {
 
-        return exchange.getOperatorID() != null && !exchange.getOperatorID().isEmpty() && exchange.getType() != null
-                && !exchange.getType().isEmpty() && exchange.getOperatorTransactionID() != null
-                && !exchange.getOperatorTransactionID().isEmpty() && exchange.getAmount() != null
+        return StringUtils.hasText(exchange.getOperatorID()) &&
+                StringUtils.hasText(exchange.getType()) &&
+                StringUtils.hasText(exchange.getOperatorTransactionID()) && exchange.getAmount() != null
                 && exchange.getDate() != null;
     }
 

@@ -98,13 +98,18 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 				"FROM LonaciTrx t " +
 				"LEFT JOIN CodeServiceMOMO csm ON t.codeService = csm.codeMomo AND csm.codeIso = :country " +
 				"LEFT JOIN ComputeParameter cp ON t.operateurID = cp.operator AND t.country = cp.country " +
-				"WHERE t.date BETWEEN :startDate AND :endDate";
+				"WHERE t.date BETWEEN :startDate AND :endDate AND t.country = :country";
 
-		String aggSqlQuery = "SELECT COUNT(*), sum(t.montant) from lonaci_trx t WHERE t.date BETWEEN :startDate AND :endDate ";
+//		String aggSqlQuery = "SELECT COUNT(*), sum(t.montant) from lonaci_trx t WHERE t.date BETWEEN :startDate AND :endDate ";
+		String aggSqlQuery = "SELECT COUNT(*), SUM(t.montant) " +
+				"FROM lonaci_trx t " +
+				"LEFT JOIN code_service_momo c ON t.code_service = c.code_momo AND c.code_iso = :country " +
+				"WHERE t.date BETWEEN :startDate AND :endDate AND t.country = :country";
+
 
 		if (StringUtils.hasText(momoOperator)) {
 			// Filtre sur l'opérateur depuis CodeServiceMOMO
-			sqlQuery += " AND LOWER(c.operateurServiceMomo) = LOWER(:operateurMomo) ";
+			sqlQuery += " AND LOWER(csm.operateurServiceMomo) = LOWER(:operateurMomo) ";
 			aggSqlQuery += " AND LOWER(c.operateur_service_momo) = LOWER(:operateurMomo) ";
 		}
 
@@ -127,9 +132,6 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 			sqlQuery += " AND t.typeTransaction = :typeTransaction";
 			aggSqlQuery += " AND t.type_transaction = :typeTransaction";
 		}
-
-		sqlQuery += " AND t.country = :country";
-		aggSqlQuery += " AND t.country = :country";
 
 		if (!StringUtils.hasText(sortBy) && !StringUtils.hasText(sortDir)) {
 			sqlQuery += " ORDER BY " + " " + sortBy + " " + sortDir;
