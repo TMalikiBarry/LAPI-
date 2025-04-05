@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.DuplicateEntryException;
-import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
 import sn.intouch.gu.lonaciapi.config.ResourceAlreadyExistsException;
+import sn.intouch.gu.lonaciapi.config.RessourceNotFoundCustomException;
 import sn.intouch.gu.lonaciapi.ejb.dto.SaveAllResponse;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO;
 import sn.intouch.gu.lonaciapi.ejb.notification.repositories.CodeServiceMOMORepository;
@@ -93,7 +93,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     public CodeServiceMOMO updateByCodeService(CodeServiceMOMO codeServiceMOMO, String code) {
         CodeServiceMOMO existingEntity = codeServiceMOMORepository.findByCodeMomo(code, codeServiceMOMO.getCodeIso())
                 .stream().findFirst()
-                .orElseThrow(() -> new EntityNotFoundCustomException("Aucune entité trouvée pour le code : " + code));
+                .orElseThrow(() -> new RessourceNotFoundCustomException("Aucune entité trouvée pour le code : " + code));
 
         return updateEntity(codeServiceMOMO, existingEntity.getId());
     }
@@ -102,7 +102,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     @Override
     public CodeServiceMOMO findById(Long id) {
         return codeServiceMOMORepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + id));
+                .orElseThrow(() -> new RessourceNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + id));
     }
 
     @Override
@@ -113,7 +113,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
     @Override
     public CodeServiceMOMO findByCodeMomoAndOperateurServiceMomo(String codeServiceMomo, String operateurServiceMomo, String codeISO) {
         return codeServiceMOMORepository.findByCodeMomoAndOperateurServiceMomo(codeServiceMomo, operateurServiceMomo, codeISO).orElseThrow(
-                () -> new EntityNotFoundCustomException("Aucune entrée trouvée pour cette combinaison."));
+                () -> new RessourceNotFoundCustomException("Aucune entrée trouvée pour cette combinaison."));
     }
 
     @Override
@@ -151,7 +151,7 @@ public class CodeServiceMOMOServiceBean implements CodeServiceMOMOService {
         if (id == null) throw new BadRequestException("L'ID est requis pour la mise à jour.");
 
         CodeServiceMOMO existingEntity = codeServiceMOMORepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + id));
+                .orElseThrow(() -> new RessourceNotFoundCustomException("CodeServiceMOMO introuvable pour l'ID " + id));
 
         // Vérification unicité si codeMomo et operateurServiceMomo sont fournis
         Optional.ofNullable(codeServiceMOMO.getCodeMomo()).ifPresent(codeMomo ->

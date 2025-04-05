@@ -53,8 +53,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(EntityNotFoundCustomException.class)
-    public ResponseEntity<APIResponse<Object>> handleNotFound(EntityNotFoundCustomException ex) {
+    @ExceptionHandler(RessourceNotFoundCustomException.class)
+    public ResponseEntity<APIResponse<Object>> handleNotFound(RessourceNotFoundCustomException ex) {
         APIResponse<Object> response = APIResponse.builder()
                 .code(HttpStatus.NOT_FOUND.value())
                 .reason(ex.getMessage())

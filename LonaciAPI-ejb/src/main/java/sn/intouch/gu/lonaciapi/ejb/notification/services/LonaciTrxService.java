@@ -29,5 +29,6 @@ public interface LonaciTrxService {
 																			   int pageSize, int page);
 
 	PaginationResponse<List<IntouchSummaryDTO>> getGroupedIntouchSummaryPaginated(
-			Date startDate, Date endDate, int page, int pageSize);
+            Date startDate, Date endDate, int page, int pageSize,
+            String transactionCountry, String operatorId, String momoOperator);
 }

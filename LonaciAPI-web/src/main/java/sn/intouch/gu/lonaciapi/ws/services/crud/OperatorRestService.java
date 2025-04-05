@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.config.BadRequestException;
-import sn.intouch.gu.lonaciapi.config.EntityNotFoundCustomException;
+import sn.intouch.gu.lonaciapi.config.RessourceNotFoundCustomException;
 import sn.intouch.gu.lonaciapi.ejb.authutils.KCUser;
 import sn.intouch.gu.lonaciapi.ejb.dto.OperatorDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -84,7 +84,7 @@ public class OperatorRestService {
         }
         List<Operator> operators = operatorService.findByOperatorIds(operatorIds);
         if (operators.isEmpty()) {
-            throw new EntityNotFoundCustomException("No operators found");
+            throw new RessourceNotFoundCustomException("No operators found");
         }
         List<OperatorDTO> dtoList = operators.stream()
                 .map(Operator::toDTO)

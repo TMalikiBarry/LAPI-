@@ -67,10 +67,11 @@ public class NotificationReportingRestService {
             @RequestParam("start_date") Long startDateLong,
             @RequestParam("end_date") Long endDateLong,
             @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
-            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int pageSize) {
-
-//        Date startDate = new Date(startDateLong);
-//        Date endDate = new Date(endDateLong);
+            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int pageSize,
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "operator_id", required = false) String operatorId,
+            @RequestParam(value = "momo_operator", required = false) String momoOperator
+    ) {
         validatePageSize(pageSize);
 
         Date startDate = parseDate(startDateLong, "Invalid date format for start_date.");
@@ -79,7 +80,9 @@ public class NotificationReportingRestService {
         validateDateRange(startDate, endDate);
 
         PaginationResponse<List<IntouchSummaryDTO>> response = lonaciNotifService
-                .getGroupedIntouchSummaryPaginated(startDate, endDate, page, pageSize);
+                .getGroupedIntouchSummaryPaginated(startDate, endDate, page, pageSize,
+                        country, operatorId, momoOperator);
+
         return ResponseEntity.ok(APIResponse.<PaginationResponse<List<IntouchSummaryDTO>>>builder()
                 .code(HttpStatus.OK.value())
                 .reason("SUCCESS")
