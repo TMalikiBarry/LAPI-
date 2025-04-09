@@ -67,7 +67,7 @@ public class NotificationReportingRestService {
             @RequestParam("start_date") Long startDateLong,
             @RequestParam("end_date") Long endDateLong,
             @RequestParam(value = "page", defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
-            @RequestParam(value = "pageSize", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int pageSize,
+            @RequestParam(value = "size", defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int pageSize,
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "operator_id", required = false) String operatorId,
             @RequestParam(value = "momo_operator", required = false) String momoOperator
