@@ -238,6 +238,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 				.append("LEFT JOIN code_service_momo csm ON t.code_service = csm.code_momo ")
 				.append("LEFT JOIN compute_parameter cp ON t.operateur_id = cp.operator ")
 				.append("WHERE t.date BETWEEN :startDate AND :endDate ")
+				.append(" AND csm.operateur_service_momo IS NOT NULL ")
 				.append("  AND LOWER(t.type_transaction) IN ('depot_momo', 'retrait') ");
 
 		// Filtre par pays de transaction (optionnel)
