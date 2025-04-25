@@ -229,6 +229,112 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 
 	@Override
 	public PaginationResponse<List<IntouchSummaryDTO>> getGroupedIntouchSummaryPaginated(
+			Date startDate,
+			Date endDate,
+			int page,
+			int pageSize,
+			String country,
+			String operatorId,
+			String momoOperator) {
+
+		// 1) Construction du SQL en une seule chaîne
+		String sql =
+				"SELECT " +
+						"  t.operateur_id            AS operatorId, " +
+						"  t.country                 AS country, " +
+						"  t.type_transaction        AS typeTransaction, " +
+						"  csm.operateur_service_momo AS momoOperator, " +
+						"  COUNT(*)                  AS totalCount, " +
+						"  SUM(t.montant)            AS totalAmount, " +
+						"  SUM( " +
+						"    CASE " +
+						"      WHEN LOWER(t.type_transaction) = 'depot_momo' " +
+						"        THEN t.montant * COALESCE(cp.payment_fees, " +
+						"                                    CASE WHEN t.country='CI' THEN 0.04 ELSE 0 END) " +
+						"      WHEN LOWER(t.type_transaction) = 'retrait' " +
+						"        THEN t.montant * COALESCE(cp.cashin_fees, " +
+						"                                    CASE WHEN t.country='CI' THEN 0.04 ELSE 0 END) " +
+						"      ELSE 0 " +
+						"    END " +
+						"  )                         AS totalCommission " +
+						"FROM lonaci_trx t " +
+						"INNER JOIN code_service_momo csm " +
+						"  ON t.code_service = csm.code_momo " +
+						" AND csm.code_iso   = :country " +
+						"LEFT JOIN compute_parameter cp " +
+						"  ON t.operateur_id = cp.operator " +
+						" AND t.country      = cp.country " +
+						"WHERE t.date BETWEEN :startDate AND :endDate " +
+						"  AND t.country = :country " +
+						"  AND LOWER(t.type_transaction) IN ('depot_momo','retrait')";
+
+		if (StringUtils.hasText(operatorId)) {
+			sql += " AND t.operateur_id = :operatorId";
+		}
+		if (StringUtils.hasText(momoOperator)) {
+			sql += " AND LOWER(csm.operateur_service_momo) = LOWER(:momoOperator)";
+		}
+
+		sql +=
+				" GROUP BY " +
+						"   t.operateur_id, " +
+						"   t.country, " +
+						"   t.type_transaction, " +
+						"   csm.operateur_service_momo " +
+						" ORDER BY " +
+						"   t.operateur_id ASC, " +
+						"   t.type_transaction ASC";
+
+		// 2) Exécution de la requête paginée
+		Query query = em.createNativeQuery(sql);
+		query.setParameter("startDate", startDate);
+		query.setParameter("endDate", endDate);
+		query.setParameter("country", country);
+		if (StringUtils.hasText(operatorId)) {
+			query.setParameter("operatorId", operatorId);
+		}
+		if (StringUtils.hasText(momoOperator)) {
+			query.setParameter("momoOperator", momoOperator);
+		}
+
+		query.setFirstResult(page * pageSize);
+		query.setMaxResults(pageSize);
+
+		@SuppressWarnings("unchecked")
+		List<Object[]> rows = query.getResultList();
+
+		// 3) On se contente du nombre de groupes récupérés
+		long totalGroups = rows.size();
+
+		// 4) Mapping vers DTO
+		List<IntouchSummaryDTO> data = rows.stream().map(r -> {
+			String opId = (String) r[0];
+			String ctr = (String) r[1];
+			String type = (String) r[2];
+			String momoOp = (String) r[3];
+			long count = ((Number) r[4]).longValue();
+			double amount = ((Number) r[5]).doubleValue();
+			double comm = ((Number) r[6]).doubleValue();
+
+			return IntouchSummaryDTO.builder()
+					.operatorId(opId)
+					.typeTransaction(type)
+					.momoOperator(momoOp)
+					.totalCount(count)
+					.totalAmount(formatLabelAmount(amount))
+					.totalCommission(formatLabelAmount(comm))
+					.build();
+		}).collect(Collectors.toList());
+
+		return PaginationResponse.<List<IntouchSummaryDTO>>builder()
+				.totalSize(totalGroups)
+				.data(data)
+				.pageSize(pageSize)
+				.build();
+	}
+
+
+	public PaginationResponse<List<IntouchSummaryDTO>> getGroupedIntouchSummaryPaginated_old(
 			Date startDate, Date endDate, int page, int pageSize,
 			String country, String operatorId, String momoOperator) {
 
@@ -336,75 +442,7 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 	}
 
 
-	public PaginationResponse<List<IntouchSummaryDTO>> getGroupedIntouchSummaryPaginated_old(
-			Date startDate, Date endDate, int page, int pageSize) {
 
-		// Partie commune de la requête (FROM, filtres et GROUP BY)
-		String baseSql = "FROM lonaci_trx t " +
-				"LEFT JOIN code_service_momo csm ON t.code_service = csm.code_momo " +
-				"LEFT JOIN compute_parameter cp ON t.operateur_id = cp.operator " +
-				"WHERE t.date BETWEEN :startDate AND :endDate " +
-				"  AND LOWER(t.type_transaction) IN ('depot_momo', 'retrait') " +
-				"GROUP BY t.operateur_id, t.type_transaction, csm.operateur_service_momo ";
-
-		// Requête principale avec sélection et tri
-		String sqlQuery = "SELECT " +
-				"  t.operateur_id AS operatorId, " +
-				"  t.type_transaction AS typeTransaction, " +
-				"  csm.operateur_service_momo AS momoOperator, " +
-				"  SUM(t.montant) AS totalAmount, " +
-				"  SUM(CASE " +
-				"        WHEN LOWER(t.type_transaction) = 'depot_momo' THEN t.montant * COALESCE(cp.payment_fees, 0.04) " +
-				"        WHEN LOWER(t.type_transaction) = 'retrait' THEN t.montant * COALESCE(cp.cashin_fees, 0.04) " +
-				"        ELSE 0 " +
-				"      END) AS totalCommission " +
-				baseSql +
-				"ORDER BY t.operateur_id ASC, t.type_transaction ASC";
-
-		// Requête de comptage en réutilisant la partie commune sans ORDER BY
-		String countSql = "SELECT COUNT(*) FROM (" +
-				"SELECT t.operateur_id " +
-				baseSql +
-				") AS sub";
-
-		// Création et paramétrage de la requête principale
-		Query query = em.createNativeQuery(sqlQuery);
-		query.setParameter("startDate", startDate);
-		query.setParameter("endDate", endDate);
-		query.setFirstResult(page * pageSize);
-		query.setMaxResults(pageSize);
-
-		@SuppressWarnings("unchecked")
-		List<Object[]> resultList = query.getResultList();
-
-		// Création et paramétrage de la requête de comptage
-		Query countQuery = em.createNativeQuery(countSql);
-		countQuery.setParameter("startDate", startDate);
-		countQuery.setParameter("endDate", endDate);
-		Number totalCount = (Number) countQuery.getSingleResult();
-
-		// Mapping des résultats vers le DTO
-		List<IntouchSummaryDTO> summaryList = resultList.stream().map(row -> {
-			String opId = row[0] != null ? row[0].toString() : null;
-			String typeTx = row[1] != null ? row[1].toString() : null;
-			String momoOp = row[2] != null ? row[2].toString() : null;
-			double totalAmount = row[3] != null ? ((Number) row[3]).doubleValue() : 0D;
-			double totalCommission = row[4] != null ? ((Number) row[4]).doubleValue() : 0D;
-			return IntouchSummaryDTO.builder()
-					.operatorId(opId)
-					.typeTransaction(typeTx)
-					.momoOperator(momoOp)
-					.totalAmount(formatLabelAmount(totalAmount))
-					.totalCommission(formatLabelAmount(totalCommission))
-					.build();
-		}).collect(Collectors.toList());
-
-		return PaginationResponse.<List<IntouchSummaryDTO>>builder()
-				.totalSize(totalCount.longValue())
-				.data(summaryList)
-				.pageSize(pageSize)
-				.build();
-	}
 
 
 	public String formatLabelAmount(double amount) {
