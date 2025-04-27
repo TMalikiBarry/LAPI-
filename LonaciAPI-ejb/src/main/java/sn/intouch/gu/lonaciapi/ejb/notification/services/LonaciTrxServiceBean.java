@@ -241,10 +241,8 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		String sql =
 				"SELECT " +
 						"  t.operateur_id            AS operatorId, " +
-						"  t.country                 AS country, " +
 						"  t.type_transaction        AS typeTransaction, " +
 						"  csm.operateur_service_momo AS momoOperator, " +
-						"  COUNT(*)                  AS totalCount, " +
 						"  SUM(t.montant)            AS totalAmount, " +
 						"  SUM( " +
 						"    CASE " +
@@ -309,18 +307,16 @@ public class LonaciTrxServiceBean implements LonaciTrxService {
 		// 4) Mapping vers DTO
 		List<IntouchSummaryDTO> data = rows.stream().map(r -> {
 			String opId = (String) r[0];
-			String ctr = (String) r[1];
-			String type = (String) r[2];
-			String momoOp = (String) r[3];
-			long count = ((Number) r[4]).longValue();
-			double amount = ((Number) r[5]).doubleValue();
-			double comm = ((Number) r[6]).doubleValue();
+			String type = (String) r[1];
+			String momoOp = (String) r[2];
+			double amount = ((Number) r[3]).doubleValue();
+			double comm = ((Number) r[4]).doubleValue();
 
 			return IntouchSummaryDTO.builder()
 					.operatorId(opId)
 					.typeTransaction(type)
 					.momoOperator(momoOp)
-					.totalCount(count)
+//					.totalCount(count)
 					.totalAmount(formatLabelAmount(amount))
 					.totalCommission(formatLabelAmount(comm))
 					.build();

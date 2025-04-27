@@ -11,5 +11,4 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class IntouchSummaryDTO {
     private String operatorId, typeTransaction, momoOperator, totalAmount, totalCommission;
-    private long totalCount;
 }
