@@ -107,6 +107,13 @@ public class ComputeRevenueSchedule {
                             + computeParameter.getCashinRate() * (computeParameter.getCashinFees() * Math.abs(payoutOverallVolume));
                     revenue = grossGamingProduct - Math.abs(integratorRemuneration);
                     royalties = computeParameter.getRoyaltyRate() * revenue;
+                } else if(Boolean.TRUE.equals(operator.getNotified())){
+                    grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(misesOverallVolume)
+                            - computeParameter.getCashinRate() * Math.abs(gainsOverallVolume);;
+                    integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
+                            + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);
+                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                    royalties = computeParameter.getRoyaltyRate() * revenue;
                 } else {
                     grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(payinOverallVolume)
                             - computeParameter.getCashinRate() * Math.abs(payoutOverallVolume);;
