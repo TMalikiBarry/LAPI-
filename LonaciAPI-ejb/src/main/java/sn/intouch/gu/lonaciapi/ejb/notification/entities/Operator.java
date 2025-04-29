@@ -49,6 +49,7 @@ public class Operator implements Serializable {
 	private String statut;
 	@Column(name = "country")
 	private String country;
+	private Boolean notified;
 
 	@PreUpdate
 	private void updatedDate() {
