@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import sn.intouch.gu.lonaciapi.config.BadRequestException;
 import sn.intouch.gu.lonaciapi.config.InvalidDateException;
 import sn.intouch.gu.lonaciapi.ejb.dto.IntouchSummaryDTO;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
@@ -47,7 +48,8 @@ public class NotificationReportingRestService {
     ) {
         if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-//        validatePageSize(size);
+
+        validatePageSize(size);
 
         Date startDate = parseDate(startDateLong, "Invalid date format for start_date.");
         Date endDate = parseDate(endDateLong, "Invalid date format for end_date.");
@@ -71,7 +73,7 @@ public class NotificationReportingRestService {
             @RequestParam(value = "operator_id", required = false) String operatorId,
             @RequestParam(value = "momo_operator", required = false) String momoOperator
     ) {
-//        validatePageSize(pageSize);
+        validatePageSize(pageSize);
 
         Date startDate = parseDate(startDateLong, "Invalid date format for start_date.");
         Date endDate = parseDate(endDateLong, "Invalid date format for end_date.");
@@ -89,7 +91,7 @@ public class NotificationReportingRestService {
                 .build());
     }
 
-    /*private void validatePageSize(int size) {
+    private void validatePageSize(int size) {
         int MAX_SIZE = AppConstants.MAX_PAGE_SIZE;
         Parameter param = parameterService.getParameterByCode("PARAM_MAX_PAGE_SIZE_AUTHORIZED");
 
@@ -97,7 +99,7 @@ public class NotificationReportingRestService {
 
         if (size > MAX_SIZE)
             throw new BadRequestException(String.format("Page size (param size) must not exceed %d !!!", MAX_SIZE));
-    }*/
+    }
 
     private Date parseDate(Long dateLong, String errorMessage) {
         try {
