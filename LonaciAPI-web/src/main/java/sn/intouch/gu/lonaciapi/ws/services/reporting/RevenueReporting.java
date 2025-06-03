@@ -166,6 +166,31 @@ public class RevenueReporting {
                                 .month(monthResponse.getBonus())
                                 .build()
                 )
+
+                .grossRevenue(
+                        TimedResponse.<Double>builder()
+                                .day(computeGross(dayResponse))
+                                .week(computeGross(weekResponse))
+                                .month(computeGross(monthResponse))
+                                .build()
+                )
+
+                .gamblingTax(
+                        TimedResponse.<Double>builder()
+                                .day(computeTax(dayResponse))
+                                .week(computeTax(weekResponse))
+                                .month(computeTax(monthResponse))
+                                .build()
+                )
+
+                .withholding(
+                        TimedResponse.<Double>builder()
+                                .day(computeWithholding(dayResponse))
+                                .week(computeWithholding(weekResponse))
+                                .month(computeWithholding(monthResponse))
+                                .build()
+                )
+
                 .build();
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", reformattedResponse));
@@ -224,6 +249,25 @@ public class RevenueReporting {
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", Revenue.toDTOs(revenues)));
     }
 
+    private Double computeGross(RevenueResponse r) {
+        double mises = (r.getMises() != null) ? r.getMises() : 0.0;
+        double bonus = (r.getBonus() != null) ? r.getBonus() : 0.0;
+        return mises - bonus;
+    }
+
+    private Double computeTax(RevenueResponse r) {
+        double gross = computeGross(r);
+        return gross * 0.05;
+    }
+
+    private Double computeWithholding(RevenueResponse r) {
+        double gain = (r.getGain() != null) ? r.getGain() : 0.0;
+        if (gain >= 500_000d) {
+            return gain * 0.15;
+        } else {
+            return 0.0;
+        }
+    }
     @RequestMapping(value = {"/api/v2/aggregation/launch-schedule"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<String>> test(
             @RequestParam(value = "date") String date,

@@ -22,4 +22,9 @@ public class RevenueReformattedResponse implements Serializable {
     private TimedResponse<Double> mises;
     private TimedResponse<Double> gain;
     private TimedResponse<Double> bonus;
+
+    // NEW
+    private TimedResponse<Double> grossRevenue;
+    private TimedResponse<Double> gamblingTax;
+    private TimedResponse<Double> withholding;
 }
