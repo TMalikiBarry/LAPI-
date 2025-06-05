@@ -15,5 +15,14 @@ public interface RevenueService {
 
 	List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator, String country);
 
+	Double sumWithholdingByDateAndOperator(Date startDate,
+										   Date endDate,
+										   String operator,
+										   String country);
+
+	Double sumWithholdingForAllOperatorsBF(Date startDate,
+										   Date endDate,
+										   String country);
+
     List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator, String country);
 }

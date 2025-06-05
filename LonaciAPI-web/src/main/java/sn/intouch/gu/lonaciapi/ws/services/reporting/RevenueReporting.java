@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.dto.RevenueDTO;
@@ -30,6 +31,8 @@ import java.util.List;
 @RestController
 @Log4j2
 public class RevenueReporting {
+
+    private static final String BF_COUNTRY_CODE = "BF";
 
     private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
     private final OperatorService operatorService = (OperatorService) JNDIUtils.lookUpEJB(EJBRegistry.OperatorServiceBean);
@@ -63,7 +66,60 @@ public class RevenueReporting {
         }
 
         log.info("Revenue :: " + new Gson().toJson(dayRevenue));
+
+        Object[] row = dayRevenue.get(0);
+
+        double grosJeuxProduct = Double.parseDouble(getStringOr0(row[0]));
+        double integrRemun = Double.parseDouble(getStringOr0(row[1]));
+        double revenuTotal = Double.parseDouble(getStringOr0(row[2]));
+        double royalties = Double.parseDouble(getStringOr0(row[3]));
+        double payin = Double.parseDouble(getStringOr0(row[4]));
+        double payout = Double.parseDouble(getStringOr0(row[5]));
+        double mises = Double.parseDouble(getStringOr0(row[6]));
+        double gain = Double.parseDouble(getStringOr0(row[7]));
+        double bonus = Double.parseDouble(getStringOr0(row[8]));
+
+        // 5) Calcul des trois nouveaux champs, mais **seulement** si country = "BF".
+        //    Sinon, on laisse 0.
+        double grossRevenue = 0D;
+        double gamblingTax = 0D;
+        double withholding = 0D;
+
+        if (BF_COUNTRY_CODE.equalsIgnoreCase(country.trim())) {
+            // 5a) grossRevenue = mises – (gain + bonus)
+            grossRevenue = mises - (gain + bonus);
+
+            // 5b) gamblingTax = 5 % × grossRevenue
+            gamblingTax = grossRevenue * 0.05;
+
+            // 5c) withholding
+            withholding = StringUtils.hasText(operator) ?
+                    revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
+                    revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+
+        }
+
+        // 6) Construction du DTO final en incluant les trois nouveaux champs
         RevenueResponse response = RevenueResponse.builder()
+                .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
+                .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
+                .operator(operator)
+                .grossGamingProduct(grosJeuxProduct)
+                .integratorRemuneration(integrRemun)
+                .revenue(revenuTotal)
+                .royalties(royalties)
+                .payin(payin)
+                .payout(payout)
+                .mises(mises)
+                .gain(gain)
+                .bonus(bonus)
+                .grossRevenue(grossRevenue)
+                .gamblingTax(gamblingTax)
+                .withholding(withholding)
+                .build();
+
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
+        /*RevenueResponse response = RevenueResponse.builder()
                 .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
                 .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
                 .operator(operator)
@@ -77,7 +133,7 @@ public class RevenueReporting {
                 .gain(Double.parseDouble(getStringOr0(dayRevenue.get(0)[7])))
                 .bonus(Double.parseDouble(getStringOr0(dayRevenue.get(0)[8])))
                 .build();
-        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));*/
     }
 
     @RequestMapping(value = {"/api/v2/aggregation/revenue-timed"}, method = RequestMethod.GET, produces = "application/json")
@@ -96,15 +152,51 @@ public class RevenueReporting {
         RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
                 startDate, endDate);
 
+        Double withholdingDay = StringUtils.hasText(operator) ?
+                revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
+                revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
         RevenueResponse weekResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
                 startDate, endDate);
+
+        Double withholdingWeek = StringUtils.hasText(operator) ?
+                revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
+                revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
 
         startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
         RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
                 startDate, endDate);
 
+
+        Double withholdingMonth = StringUtils.hasText(operator) ?
+                revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
+                revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+
+        // ----- CONSTRUCTION DU DTO FINAL -----
+        TimedResponse<Double> withholdingTimed = TimedResponse.<Double>builder()
+                .day(withholdingDay)
+                .week(withholdingWeek)
+                .month(withholdingMonth)
+                .build();
+
+
         RevenueReformattedResponse reformattedResponse = RevenueReformattedResponse.builder()
+                .grossRevenue(
+                        TimedResponse.<Double>builder()
+                                .day(computeGross(dayResponse, country))
+                                .week(computeGross(weekResponse, country))
+                                .month(computeGross(monthResponse, country))
+                                .build()
+                )
+                .gamblingTax(
+                        TimedResponse.<Double>builder()
+                                .day(computeTax(dayResponse, country))
+                                .week(computeTax(weekResponse, country))
+                                .month(computeTax(monthResponse, country))
+                                .build()
+                )
+                .withholding(withholdingTimed)
                 .grossGamingProduct(
                         TimedResponse.<Double>builder()
                                 .day(dayResponse.getGrossGamingProduct())
@@ -167,30 +259,6 @@ public class RevenueReporting {
                                 .build()
                 )
 
-                .grossRevenue(
-                        TimedResponse.<Double>builder()
-                                .day(computeGross(dayResponse))
-                                .week(computeGross(weekResponse))
-                                .month(computeGross(monthResponse))
-                                .build()
-                )
-
-                .gamblingTax(
-                        TimedResponse.<Double>builder()
-                                .day(computeTax(dayResponse))
-                                .week(computeTax(weekResponse))
-                                .month(computeTax(monthResponse))
-                                .build()
-                )
-
-                .withholding(
-                        TimedResponse.<Double>builder()
-                                .day(computeWithholding(dayResponse))
-                                .week(computeWithholding(weekResponse))
-                                .month(computeWithholding(monthResponse))
-                                .build()
-                )
-
                 .build();
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", reformattedResponse));
@@ -215,6 +283,36 @@ public class RevenueReporting {
                 .bonus(Double.parseDouble(getStringOr0(dataRevenue.get(0)[8])))
                 .build();
     }
+
+
+    private Double computeGross(RevenueResponse r, String country) {
+        if (r == null) {
+            return 0D;
+        }
+        if (BF_COUNTRY_CODE.equalsIgnoreCase(country)) {
+
+            double mises = (r.getMises() != null ? r.getMises() : 0D);
+            double bonus = (r.getBonus() != null ? r.getBonus() : 0D);
+            return mises - bonus;
+        }
+
+        return (r.getGrossGamingProduct() != null ? r.getGrossGamingProduct() : 0D);
+    }
+
+
+    private Double computeTax(RevenueResponse r, String country) {
+        if (r == null) {
+            return 0D;
+        }
+        if (BF_COUNTRY_CODE.equalsIgnoreCase(country)) {
+
+            double grossRev = computeGross(r, country);
+            return grossRev * 0.05;
+        }
+
+        return 0D;
+    }
+    
 
     private String getStringOr0(Object o) {
         if (o != null)
@@ -249,25 +347,7 @@ public class RevenueReporting {
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", Revenue.toDTOs(revenues)));
     }
 
-    private Double computeGross(RevenueResponse r) {
-        double mises = (r.getMises() != null) ? r.getMises() : 0.0;
-        double bonus = (r.getBonus() != null) ? r.getBonus() : 0.0;
-        return mises - bonus;
-    }
 
-    private Double computeTax(RevenueResponse r) {
-        double gross = computeGross(r);
-        return gross * 0.05;
-    }
-
-    private Double computeWithholding(RevenueResponse r) {
-        double gain = (r.getGain() != null) ? r.getGain() : 0.0;
-        if (gain >= 500_000d) {
-            return gain * 0.15;
-        } else {
-            return 0.0;
-        }
-    }
     @RequestMapping(value = {"/api/v2/aggregation/launch-schedule"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<String>> test(
             @RequestParam(value = "date") String date,

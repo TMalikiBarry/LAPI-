@@ -108,7 +108,7 @@ public class ComputeRevenueSchedule {
                     revenue = grossGamingProduct - Math.abs(integratorRemuneration);
                     royalties = computeParameter.getRoyaltyRate() * revenue;
                 } else if(Boolean.TRUE.equals(operator.getNotified())){
-                    grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(misesOverallVolume)
+                    grossGamingProduct = computeParameter.getPaymentRate() * (Math.abs(misesOverallVolume) - Math.abs(bonusOverallVolume))
                             - computeParameter.getCashinRate() * Math.abs(gainsOverallVolume);;
                     integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
                             + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);

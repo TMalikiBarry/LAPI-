@@ -15,6 +15,9 @@ public class RevenueResponse implements Serializable {
     private String startDate;
     private String endDate;
     private String operator;
+    private Double grossRevenue = 0D;
+    private Double gamblingTax = 0D;
+    private Double withholding = 0D;
     private Double grossGamingProduct = 0D;
     private Double integratorRemuneration = 0D;
     private Double revenue = 0D;
