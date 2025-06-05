@@ -93,7 +93,7 @@ public class RevenueReporting {
             gamblingTax = grossRevenue * 0.05;
 
             // 5c) withholding
-            withholding = StringUtils.hasText(operator) ?
+            withholding = !StringUtils.hasText(operator) ?
                     revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
                     revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
 
@@ -142,36 +142,77 @@ public class RevenueReporting {
             @RequestParam(value = "operator", required = false) String operator,
             @RequestParam(value = "country") String country
     ) throws RuntimeException {
-        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator))
+        if (!AuthUtils.doesBookMakerHasAccessToOperator(authHeader, operator)) {
+            log.warn("Accès refusé : l’utilisateur n’a pas le rôle nécessaire (operator = {})", operator);
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        Date startDate, endDate;
+        }
 
-        startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
-        endDate = DateUtil.getEndOfDay();
+        log.info("Appel API revenueTimed – operator='{}', country='{}'", operator, country);
 
-        RevenueResponse dayResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
-                startDate, endDate);
+        // 2) Calcul des dates pour JOURS
+        Date startDateDay = DateUtil.getStartDateFromDateString(AggregationTimeEnum.DAY);
+        Date endDate = DateUtil.getEndOfDay(); // même fin pour toutes les fenêtres
+        log.warn("  ####### revenueTimed  Fenêtre DAY : start = {}, end = {}", startDateDay, endDate);
 
-        Double withholdingDay = StringUtils.hasText(operator) ?
-                revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
-                revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+        RevenueResponse dayResponse = buildRevenueResponse(
+                operator,
+                revenueService.sumByDateAndOperator(startDateDay, endDate, operator, country),
+                startDateDay,
+                endDate
+        );
+        log.warn("  ####### revenueTimed  Résultat DAY RevenueResponse = {}", dayResponse);
 
-        startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
-        RevenueResponse weekResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
-                startDate, endDate);
+        // 2.b) Calcul de la retenue (withholding) pour DAY
+        Double withholdingDay;
+        if (!StringUtils.hasText(operator)) {
+            // Si un opérateur est passé, on calcule autrement (somme de tous les opérateurs BF)
+            withholdingDay = revenueService.sumWithholdingForAllOperatorsBF(startDateDay, endDate, country);
+            log.warn("  ####### revenueTimed  Withholding DAY (tous opérateurs BF) = {}", withholdingDay);
+        } else {
+            // Sinon, on calcule pour l’opérateur seul (même s’il est null, il sera ignoré par la requête)
+            withholdingDay = revenueService.sumWithholdingByDateAndOperator(startDateDay, endDate, operator, country);
+            log.warn("  ####### revenueTimed  Withholding DAY (opérateur unique='{}') = {}", operator, withholdingDay);
+        }
 
-        Double withholdingWeek = StringUtils.hasText(operator) ?
-                revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
-                revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+        // 3) Fenêtre WEEK
+        Date startDateWeek = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
+        log.warn("  ####### revenueTimed  Fenêtre WEEK : start = {}, end = {}", startDateWeek, endDate);
+        RevenueResponse weekResponse = buildRevenueResponse(
+                operator,
+                revenueService.sumByDateAndOperator(startDateWeek, endDate, operator, country),
+                startDateWeek,
+                endDate
+        );
+        log.warn("  ####### revenueTimed  Résultat WEEK RevenueResponse = {}", weekResponse);
 
-        startDate = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
-        RevenueResponse monthResponse = buildRevenueResponse(operator, revenueService.sumByDateAndOperator(startDate, endDate, operator, country),
-                startDate, endDate);
+        Double withholdingWeek;
+        if (!StringUtils.hasText(operator)) {
+            withholdingWeek = revenueService.sumWithholdingForAllOperatorsBF(startDateWeek, endDate, country);
+            log.warn("  ####### revenueTimed  Withholding WEEK (tous opérateurs BF) = {}", withholdingWeek);
+        } else {
+            withholdingWeek = revenueService.sumWithholdingByDateAndOperator(startDateWeek, endDate, operator, country);
+            log.warn("  ####### revenueTimed  Withholding WEEK (opérateur unique='{}') = {}", operator, withholdingWeek);
+        }
 
+        // 4) Fenêtre MONTH
+        Date startDateMonth = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
+        log.warn("  ####### revenueTimed  Fenêtre MONTH : start = {}, end = {}", startDateMonth, endDate);
+        RevenueResponse monthResponse = buildRevenueResponse(
+                operator,
+                revenueService.sumByDateAndOperator(startDateMonth, endDate, operator, country),
+                startDateMonth,
+                endDate
+        );
+        log.warn("  ####### revenueTimed  Résultat MONTH RevenueResponse = {}", monthResponse);
 
-        Double withholdingMonth = StringUtils.hasText(operator) ?
-                revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
-                revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+        Double withholdingMonth;
+        if (!StringUtils.hasText(operator)) {
+            withholdingMonth = revenueService.sumWithholdingForAllOperatorsBF(startDateMonth, endDate, country);
+            log.warn("  ####### revenueTimed  Withholding MONTH (tous opérateurs BF) = {}", withholdingMonth);
+        } else {
+            withholdingMonth = revenueService.sumWithholdingByDateAndOperator(startDateMonth, endDate, operator, country);
+            log.warn("  ####### revenueTimed  Withholding MONTH (opérateur unique='{}') = {}", operator, withholdingMonth);
+        }
 
         // ----- CONSTRUCTION DU DTO FINAL -----
         TimedResponse<Double> withholdingTimed = TimedResponse.<Double>builder()

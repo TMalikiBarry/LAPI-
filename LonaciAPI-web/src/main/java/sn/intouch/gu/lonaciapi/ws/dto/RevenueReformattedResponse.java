@@ -13,6 +13,9 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class RevenueReformattedResponse implements Serializable {
     private String operator;
+    private TimedResponse<Double> grossRevenue;
+    private TimedResponse<Double> gamblingTax;
+    private TimedResponse<Double> withholding;
     private TimedResponse<Double> grossGamingProduct;
     private TimedResponse<Double> integratorRemuneration;
     private TimedResponse<Double> revenue;
@@ -22,9 +25,4 @@ public class RevenueReformattedResponse implements Serializable {
     private TimedResponse<Double> mises;
     private TimedResponse<Double> gain;
     private TimedResponse<Double> bonus;
-
-    // NEW
-    private TimedResponse<Double> grossRevenue;
-    private TimedResponse<Double> gamblingTax;
-    private TimedResponse<Double> withholding;
 }

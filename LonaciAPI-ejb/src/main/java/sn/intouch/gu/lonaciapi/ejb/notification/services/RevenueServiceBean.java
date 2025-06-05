@@ -1,5 +1,6 @@
 package sn.intouch.gu.lonaciapi.ejb.notification.services;
 
+import lombok.extern.log4j.Log4j2;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
 
 import javax.ejb.Stateless;
@@ -10,6 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 
+@Log4j2
 @Stateless
 public class RevenueServiceBean implements RevenueService {
 
@@ -63,7 +65,7 @@ public class RevenueServiceBean implements RevenueService {
                                                   Date endDate,
                                                   String country) {
         if (country == null || !"BF".equalsIgnoreCase(country.trim())) {
-            // Si le pays n'est pas "BF", on ne calcule rien.
+            log.warn("########### revenuetimed servicebean - country '{}' is not BF → returning 0", country);
             return 0D;
         }
 
@@ -87,9 +89,12 @@ public class RevenueServiceBean implements RevenueService {
                 .setParameter("endDate", endDate)
                 .setParameter("country", country);
 
-        // getSingleResult() retourne un objet unique (SUM du CASE ci-dessus)
         Number resultNum = (Number) query.getSingleResult();
-        return (resultNum != null) ? resultNum.doubleValue() : 0D;
+        Double withholding = (resultNum != null) ? resultNum.doubleValue() : 0D;
+
+        log.warn("########### revenuetimed servicebean - sumWithholdingForAllOperatorsBF computed withholding='{}'", withholding);
+
+        return withholding;
     }
 
     @Override
