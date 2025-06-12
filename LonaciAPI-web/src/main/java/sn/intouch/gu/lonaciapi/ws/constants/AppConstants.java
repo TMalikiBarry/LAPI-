@@ -10,4 +10,6 @@ public class AppConstants {
     public static final long SIXTY_DAYS_IN_MILLIS = 60L * 24 * 3600 * 1000;
     public static final int MAX_PAGE_SIZE = 200000;
     public static final String CI_COUNTRY_CODE = "CI";
+    public static final String BF_COUNTRY_CODE = "BF";
+    public static final double BF_PERCENT_FORMULA = 0.95;
 }

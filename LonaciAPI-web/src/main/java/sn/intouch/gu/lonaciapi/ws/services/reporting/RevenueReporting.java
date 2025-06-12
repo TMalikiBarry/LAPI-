@@ -18,6 +18,7 @@ import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.schedules.ComputeRevenueSchedule;
 import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
+import sn.intouch.gu.lonaciapi.ws.constants.AppConstants;
 import sn.intouch.gu.lonaciapi.ws.dto.RevenueReformattedResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.RevenueResponse;
 import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
@@ -31,8 +32,6 @@ import java.util.List;
 @RestController
 @Log4j2
 public class RevenueReporting {
-
-    private static final String BF_COUNTRY_CODE = "BF";
 
     private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
     private final OperatorService operatorService = (OperatorService) JNDIUtils.lookUpEJB(EJBRegistry.OperatorServiceBean);
@@ -85,9 +84,9 @@ public class RevenueReporting {
         double gamblingTax = 0D;
         double withholding = 0D;
 
-        if (BF_COUNTRY_CODE.equalsIgnoreCase(country.trim())) {
-            // 5a) grossRevenue = mises – (gain + bonus)
-            grossRevenue = mises - (gain + bonus);
+        if (AppConstants.BF_COUNTRY_CODE.equalsIgnoreCase(country.trim())) {
+            // 5a) grossRevenue = mises –  bonus
+            grossRevenue = mises - bonus;
 
             // 5b) gamblingTax = 5 % × grossRevenue
             gamblingTax = grossRevenue * 0.05;
@@ -96,6 +95,8 @@ public class RevenueReporting {
             withholding = !StringUtils.hasText(operator) ?
                     revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
                     revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
+
+            grosJeuxProduct = AppConstants.BF_PERCENT_FORMULA * grossRevenue - gain;
 
         }
 
@@ -158,7 +159,8 @@ public class RevenueReporting {
                 operator,
                 revenueService.sumByDateAndOperator(startDateDay, endDate, operator, country),
                 startDateDay,
-                endDate
+                endDate,
+                country
         );
         log.warn("  ####### revenueTimed  Résultat DAY RevenueResponse = {}", dayResponse);
 
@@ -181,7 +183,8 @@ public class RevenueReporting {
                 operator,
                 revenueService.sumByDateAndOperator(startDateWeek, endDate, operator, country),
                 startDateWeek,
-                endDate
+                endDate,
+                country
         );
         log.warn("  ####### revenueTimed  Résultat WEEK RevenueResponse = {}", weekResponse);
 
@@ -201,7 +204,8 @@ public class RevenueReporting {
                 operator,
                 revenueService.sumByDateAndOperator(startDateMonth, endDate, operator, country),
                 startDateMonth,
-                endDate
+                endDate,
+                country
         );
         log.warn("  ####### revenueTimed  Résultat MONTH RevenueResponse = {}", monthResponse);
 
@@ -305,11 +309,46 @@ public class RevenueReporting {
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", reformattedResponse));
     }
 
-    private RevenueResponse buildRevenueResponse(String operator, List<Object[]> dataRevenue, Date startDate, Date endDate) {
+    private RevenueResponse buildRevenueResponse(String operator, List<Object[]> dataRevenue,
+                                                 Date startDate, Date endDate, String country) {
         if (dataRevenue == null || dataRevenue.isEmpty()) {
             return null;
         }
+
+        Object[] row = dataRevenue.get(0);
+
+        // On récupère uniquement les champs corrects :
+        double mises = Double.parseDouble(getStringOr0(row[6])); // SUM(mises)
+        double gain = Double.parseDouble(getStringOr0(row[7])); // SUM(gain)
+        double bonus = Double.parseDouble(getStringOr0(row[8])); // SUM(bonus)
+
+        // Calcul du CA Brut
+        double grossRevenue = mises - bonus;
+
+        // Nouvelle formule PBJ (95% CA Brut – gains)
+        double pbj = country.trim().equalsIgnoreCase(AppConstants.BF_COUNTRY_CODE) ?
+                AppConstants.BF_PERCENT_FORMULA * grossRevenue - gain : Double.parseDouble(getStringOr0(row[0]));
+
         return RevenueResponse.builder()
+                .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
+                .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
+                .operator(operator)
+
+                // On n'utilise plus le premier champ SUM(grossGamingProduct) de la requête,
+                // on remplace par notre PBJ recalculé :
+                .grossGamingProduct(pbj)
+
+                // On laisse le reste tel quel :
+                .integratorRemuneration(Double.parseDouble(getStringOr0(row[1])))
+                .revenue(Double.parseDouble(getStringOr0(row[2])))
+                .royalties(Double.parseDouble(getStringOr0(row[3])))
+                .payin(Double.parseDouble(getStringOr0(row[4])))
+                .payout(Double.parseDouble(getStringOr0(row[5])))
+                .mises(mises)
+                .gain(gain)
+                .bonus(bonus)
+                .build();
+        /*return RevenueResponse.builder()
                 .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
                 .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
                 .operator(operator)
@@ -322,7 +361,7 @@ public class RevenueReporting {
                 .mises(Double.parseDouble(getStringOr0(dataRevenue.get(0)[6])))
                 .gain(Double.parseDouble(getStringOr0(dataRevenue.get(0)[7])))
                 .bonus(Double.parseDouble(getStringOr0(dataRevenue.get(0)[8])))
-                .build();
+                .build();*/
     }
 
 
@@ -330,7 +369,7 @@ public class RevenueReporting {
         if (r == null) {
             return 0D;
         }
-        if (BF_COUNTRY_CODE.equalsIgnoreCase(country)) {
+        if (AppConstants.BF_COUNTRY_CODE.equalsIgnoreCase(country)) {
 
             double mises = (r.getMises() != null ? r.getMises() : 0D);
             double bonus = (r.getBonus() != null ? r.getBonus() : 0D);
@@ -345,7 +384,7 @@ public class RevenueReporting {
         if (r == null) {
             return 0D;
         }
-        if (BF_COUNTRY_CODE.equalsIgnoreCase(country)) {
+        if (AppConstants.BF_COUNTRY_CODE.equalsIgnoreCase(country)) {
 
             double grossRev = computeGross(r, country);
             return grossRev * 0.05;
