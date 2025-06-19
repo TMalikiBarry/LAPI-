@@ -35,7 +35,7 @@ public class ComputeRevenueSchedule {
     private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
 
     // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
-    @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
+    @Schedule(dayOfWeek = "*", hour = "*/12", minute = "15", persistent = true)
     public void launch(Timer timer) {
 
         Calendar cal = Calendar.getInstance(); // locale-specific
@@ -44,13 +44,13 @@ public class ComputeRevenueSchedule {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         Date endDate = new Date(cal.getTimeInMillis());
-        cal.add(Calendar.HOUR, -1);
+        cal.add(Calendar.HOUR, -12);
         Date startDate = new Date(cal.getTimeInMillis());
         compute(startDate, endDate);
     }
 
     public void compute(Date startDate, Date endDate) {
-        log.info("Running JOB for computing revenue at : START DATE " + startDate + " AND END DATE : " + endDate);
+        log.info("Running JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
         Iterable<Operator> operators = operatorService.getAll(null);
         for (Operator operator : operators) {
             computeForOperator(startDate, endDate, operator);
@@ -68,9 +68,9 @@ public class ComputeRevenueSchedule {
                     .build();
             revenueEntity = revenueService.update(revenueEntity);
             Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator.getOperatorId(), null, Boolean.TRUE, operator.getCountry());
-            log.info("Revenue Computed :: " + new Gson().toJson(values));
+            log.info("Revenue Computed :: {}", new Gson().toJson(values));
             if (values == null || values.isEmpty()) {
-                log.warn("No revenue found for operator : " + operator.getOperatorId());
+                log.warn("No revenue found for operator : {}", operator.getOperatorId());
                 return;
             }
             Double misesOverallVolume = Double.valueOf(values.get("mises"));
@@ -86,21 +86,21 @@ public class ComputeRevenueSchedule {
 
             ComputeParameter computeParameter = computeParameterService.getParameterByOperator(operator.getOperatorId());
             if (computeParameter == null) {
-                log.info("Computing default revenue for country : " + operator.getCountry());
+                log.info("Computing default revenue for country : {}", operator.getCountry());
                 if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
                     grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));
                     integratorRemuneration = 0.04 * Math.abs(payinOverallVolume) + 0.02 * Math.abs(payoutOverallVolume);
                     revenue = grossGamingProduct - Math.abs(integratorRemuneration);
                     royalties = 0.5 * revenue;
                 } else if (BF_COUNTRY_CODE.equals(operator.getCountry())) {
-                    log.warn("No revenue default computation for country : " + operator.getCountry());
+                    log.warn("No revenue default computation for country : {}", operator.getCountry());
                     return;
                 } else {
-                    log.warn("Country " + operator.getCountry() + " is not supported for computing revenue.");
+                    log.warn("Country {} is not supported for computing revenue.", operator.getCountry());
                     return;
                 }
             } else {
-                log.info("Computing revenue for operator : " + operator.getOperatorId());
+                log.info("Computing revenue for operator : {}", operator.getOperatorId());
                 if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
                     grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));;
                     integratorRemuneration = computeParameter.getPaymentRate() * (computeParameter.getPaymentFees() * Math.abs(payinOverallVolume))
