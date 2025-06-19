@@ -1,8 +1,8 @@
 {
-  "realm": "sso-intouch-iacc",
+  "realm": "sso-intouch-prod",
   "bearer-only": true,
-  "auth-server-url": "https://intouchgu2-qlf.worldline-solutions.com/auth",
-  "ssl-required": "none",
+  "auth-server-url": "https://intouchgu2.worldline-solutions.com/auth",
+  "ssl-required": "external",
   "resource": "lonaci-api",
   "confidential-port": 0
 }
