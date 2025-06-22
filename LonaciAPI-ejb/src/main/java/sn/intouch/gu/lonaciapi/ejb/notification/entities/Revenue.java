@@ -39,9 +39,10 @@ public class Revenue implements Serializable {
 	private Double mises;
 	private Double gain;
 	private Double bonus;
+	private Double withholding;
 	private String country;
 
-	public Revenue(Date date, Double grossGamingProduct, Double integratorRemuneration, Double revenue, Double royalties, Double payin, Double payout, Double mises, Double gain, Double bonus) {
+	public Revenue(Date date, Double grossGamingProduct, Double integratorRemuneration, Double revenue, Double royalties, Double payin, Double payout, Double mises, Double gain, Double bonus, Double withholding) {
 		this.date = date;
 		this.grossGamingProduct = getValueOr0(grossGamingProduct);
 		this.integratorRemuneration = getValueOr0(integratorRemuneration);
@@ -52,6 +53,7 @@ public class Revenue implements Serializable {
 		this.mises = getValueOr0(mises);
 		this.gain = getValueOr0(gain);
 		this.bonus = getValueOr0(bonus);
+		this.withholding = getValueOr0(withholding);
 	}
 
 	private Double getValueOr0(Double value) {

@@ -78,6 +78,7 @@ public class ComputeRevenueSchedule {
             Double bonusOverallVolume = Double.valueOf(values.get("bonus"));
             Double payinOverallVolume = Double.valueOf(values.get("payin"));
             Double payoutOverallVolume = Double.valueOf(values.get("payout"));
+            Double withholding = Double.valueOf(values.get("withholding"));
 
             Double grossGamingProduct;
             Double integratorRemuneration;
@@ -134,6 +135,7 @@ public class ComputeRevenueSchedule {
             revenueEntity.setMises(misesOverallVolume);
             revenueEntity.setGain(gainsOverallVolume);
             revenueEntity.setBonus(bonusOverallVolume);
+            revenueEntity.setWithholding(withholding);
 
             revenueService.update(revenueEntity);
         } catch (Exception e) {

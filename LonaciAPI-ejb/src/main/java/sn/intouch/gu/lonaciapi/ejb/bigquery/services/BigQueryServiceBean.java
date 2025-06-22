@@ -256,7 +256,13 @@ public class BigQueryServiceBean implements BigQueryService{
                     "    CASE WHEN type.category = 'PAY_OUT' " +
                     "    THEN 1 " +
                     "    END " +
-                    "  ) as payoutCount " +
+                    "  ) as payoutCount, " +
+                    "  SUM( " +
+                    "    CASE WHEN type.category = 'GAIN' AND type.direction = 'CREDIT' AND  trx.montant >= 500000" +
+                    "    THEN  trx.montant*0.15  " +
+                    "    ELSE 0 " +
+                    "    END " +
+                    "  ) as withholding " +
                     "  FROM " + connection.getLonaciTableRef() + " trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code " +
                     "  WHERE trx.date BETWEEN @startDate AND @endDate ";
 

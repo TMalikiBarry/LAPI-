@@ -6,7 +6,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import sn.intouch.gu.lonaciapi.ejb.bigquery.enums.AggregationTimeEnum;
 import sn.intouch.gu.lonaciapi.ejb.dto.RevenueDTO;
@@ -14,6 +13,7 @@ import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.schedules.ComputeRevenueSchedule;
@@ -35,6 +35,7 @@ public class RevenueReporting {
 
     private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
     private final OperatorService operatorService = (OperatorService) JNDIUtils.lookUpEJB(EJBRegistry.OperatorServiceBean);
+    private final LonaciTrxService lonaciTrxService = (LonaciTrxService) JNDIUtils.lookUpEJB(EJBRegistry.LonaciTrxServiceBean);
 
     @RequestMapping(value = {"/api/v1/aggregation/revenue", "/api/v2/aggregation/revenue"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<RevenueResponse>> revenue(
@@ -77,26 +78,21 @@ public class RevenueReporting {
         double mises = Double.parseDouble(getStringOr0(row[6]));
         double gain = Double.parseDouble(getStringOr0(row[7]));
         double bonus = Double.parseDouble(getStringOr0(row[8]));
+        double withholding = Double.parseDouble(getStringOr0(row[9]));
 
         // 5) Calcul des trois nouveaux champs, mais **seulement** si country = "BF".
         //    Sinon, on laisse 0.
         double grossRevenue = 0D;
         double gamblingTax = 0D;
-        double withholding = 0D;
+
 
         if (AppConstants.BF_COUNTRY_CODE.equalsIgnoreCase(country.trim())) {
             // 5a) grossRevenue = mises –  bonus
-            grossRevenue = mises - bonus;
+            grossRevenue = Math.abs(mises) - Math.abs(bonus);
 
             // 5b) gamblingTax = 5 % × grossRevenue
             gamblingTax = grossRevenue * 0.05;
 
-            // 5c) withholding
-            withholding = !StringUtils.hasText(operator) ?
-                    revenueService.sumWithholdingForAllOperatorsBF(startDate, endDate, country) :
-                    revenueService.sumWithholdingByDateAndOperator(startDate, endDate, operator, country);
-
-            grosJeuxProduct = AppConstants.BF_PERCENT_FORMULA * grossRevenue - gain;
 
         }
 
@@ -120,21 +116,7 @@ public class RevenueReporting {
                 .build();
 
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));
-        /*RevenueResponse response = RevenueResponse.builder()
-                .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
-                .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
-                .operator(operator)
-                .grossGamingProduct(Double.parseDouble(getStringOr0(dayRevenue.get(0)[0])))
-                .integratorRemuneration(Double.parseDouble(getStringOr0(dayRevenue.get(0)[1])))
-                .revenue(Double.parseDouble(getStringOr0(dayRevenue.get(0)[2])))
-                .royalties(Double.parseDouble(getStringOr0(dayRevenue.get(0)[3])))
-                .payin(Double.parseDouble(getStringOr0(dayRevenue.get(0)[4])))
-                .payout(Double.parseDouble(getStringOr0(dayRevenue.get(0)[5])))
-                .mises(Double.parseDouble(getStringOr0(dayRevenue.get(0)[6])))
-                .gain(Double.parseDouble(getStringOr0(dayRevenue.get(0)[7])))
-                .bonus(Double.parseDouble(getStringOr0(dayRevenue.get(0)[8])))
-                .build();
-        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", response));*/
+
     }
 
     @RequestMapping(value = {"/api/v2/aggregation/revenue-timed"}, method = RequestMethod.GET, produces = "application/json")
@@ -164,17 +146,6 @@ public class RevenueReporting {
         );
         log.warn("  ####### revenueTimed  Résultat DAY RevenueResponse = {}", dayResponse);
 
-        // 2.b) Calcul de la retenue (withholding) pour DAY
-        Double withholdingDay;
-        if (!StringUtils.hasText(operator)) {
-            // Si un opérateur est passé, on calcule autrement (somme de tous les opérateurs BF)
-            withholdingDay = revenueService.sumWithholdingForAllOperatorsBF(startDateDay, endDate, country);
-            log.warn("  ####### revenueTimed  Withholding DAY (tous opérateurs BF) = {}", withholdingDay);
-        } else {
-            // Sinon, on calcule pour l’opérateur seul (même s’il est null, il sera ignoré par la requête)
-            withholdingDay = revenueService.sumWithholdingByDateAndOperator(startDateDay, endDate, operator, country);
-            log.warn("  ####### revenueTimed  Withholding DAY (opérateur unique='{}') = {}", operator, withholdingDay);
-        }
 
         // 3) Fenêtre WEEK
         Date startDateWeek = DateUtil.getStartDateFromDateString(AggregationTimeEnum.WEEK);
@@ -188,15 +159,6 @@ public class RevenueReporting {
         );
         log.warn("  ####### revenueTimed  Résultat WEEK RevenueResponse = {}", weekResponse);
 
-        Double withholdingWeek;
-        if (!StringUtils.hasText(operator)) {
-            withholdingWeek = revenueService.sumWithholdingForAllOperatorsBF(startDateWeek, endDate, country);
-            log.warn("  ####### revenueTimed  Withholding WEEK (tous opérateurs BF) = {}", withholdingWeek);
-        } else {
-            withholdingWeek = revenueService.sumWithholdingByDateAndOperator(startDateWeek, endDate, operator, country);
-            log.warn("  ####### revenueTimed  Withholding WEEK (opérateur unique='{}') = {}", operator, withholdingWeek);
-        }
-
         // 4) Fenêtre MONTH
         Date startDateMonth = DateUtil.getStartDateFromDateString(AggregationTimeEnum.MONTH);
         log.warn("  ####### revenueTimed  Fenêtre MONTH : start = {}, end = {}", startDateMonth, endDate);
@@ -209,21 +171,6 @@ public class RevenueReporting {
         );
         log.warn("  ####### revenueTimed  Résultat MONTH RevenueResponse = {}", monthResponse);
 
-        Double withholdingMonth;
-        if (!StringUtils.hasText(operator)) {
-            withholdingMonth = revenueService.sumWithholdingForAllOperatorsBF(startDateMonth, endDate, country);
-            log.warn("  ####### revenueTimed  Withholding MONTH (tous opérateurs BF) = {}", withholdingMonth);
-        } else {
-            withholdingMonth = revenueService.sumWithholdingByDateAndOperator(startDateMonth, endDate, operator, country);
-            log.warn("  ####### revenueTimed  Withholding MONTH (opérateur unique='{}') = {}", operator, withholdingMonth);
-        }
-
-        // ----- CONSTRUCTION DU DTO FINAL -----
-        TimedResponse<Double> withholdingTimed = TimedResponse.<Double>builder()
-                .day(withholdingDay)
-                .week(withholdingWeek)
-                .month(withholdingMonth)
-                .build();
 
 
         RevenueReformattedResponse reformattedResponse = RevenueReformattedResponse.builder()
@@ -241,7 +188,13 @@ public class RevenueReporting {
                                 .month(computeTax(monthResponse, country))
                                 .build()
                 )
-                .withholding(withholdingTimed)
+                .withholding(
+                        TimedResponse.<Double>builder()
+                                .day(dayResponse.getWithholding())
+                                .week(weekResponse.getWithholding())
+                                .month(monthResponse.getWithholding())
+                                .build()
+                )
                 .grossGamingProduct(
                         TimedResponse.<Double>builder()
                                 .day(dayResponse.getGrossGamingProduct())
@@ -317,26 +270,12 @@ public class RevenueReporting {
 
         Object[] row = dataRevenue.get(0);
 
-        // On récupère uniquement les champs corrects :
-        double mises = Double.parseDouble(getStringOr0(row[6])); // SUM(mises)
-        double gain = Double.parseDouble(getStringOr0(row[7])); // SUM(gain)
-        double bonus = Double.parseDouble(getStringOr0(row[8])); // SUM(bonus)
-
-        // Calcul du CA Brut
-        double grossRevenue = mises - bonus;
-
-        // Nouvelle formule PBJ (95% CA Brut – gains)
-        double pbj = country.trim().equalsIgnoreCase(AppConstants.BF_COUNTRY_CODE) ?
-                AppConstants.BF_PERCENT_FORMULA * grossRevenue - gain : Double.parseDouble(getStringOr0(row[0]));
-
         return RevenueResponse.builder()
                 .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
                 .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
                 .operator(operator)
 
-                // On n'utilise plus le premier champ SUM(grossGamingProduct) de la requête,
-                // on remplace par notre PBJ recalculé :
-                .grossGamingProduct(pbj)
+                .grossGamingProduct(Double.parseDouble(getStringOr0(row[0])))
 
                 // On laisse le reste tel quel :
                 .integratorRemuneration(Double.parseDouble(getStringOr0(row[1])))
@@ -344,24 +283,11 @@ public class RevenueReporting {
                 .royalties(Double.parseDouble(getStringOr0(row[3])))
                 .payin(Double.parseDouble(getStringOr0(row[4])))
                 .payout(Double.parseDouble(getStringOr0(row[5])))
-                .mises(mises)
-                .gain(gain)
-                .bonus(bonus)
+                .mises(Double.parseDouble(getStringOr0(row[6])))
+                .gain(Double.parseDouble(getStringOr0(row[7])))
+                .bonus(Double.parseDouble(getStringOr0(row[8])))
+                .withholding(Double.parseDouble(getStringOr0(row[9])))
                 .build();
-        /*return RevenueResponse.builder()
-                .startDate(DateUtil.SIMPLE_DATE_FORMAT.format(startDate))
-                .endDate(DateUtil.SIMPLE_DATE_FORMAT.format(endDate))
-                .operator(operator)
-                .grossGamingProduct(Double.parseDouble(getStringOr0(dataRevenue.get(0)[0])))
-                .integratorRemuneration(Double.parseDouble(getStringOr0(dataRevenue.get(0)[1])))
-                .revenue(Double.parseDouble(getStringOr0(dataRevenue.get(0)[2])))
-                .royalties(Double.parseDouble(getStringOr0(dataRevenue.get(0)[3])))
-                .payin(Double.parseDouble(getStringOr0(dataRevenue.get(0)[4])))
-                .payout(Double.parseDouble(getStringOr0(dataRevenue.get(0)[5])))
-                .mises(Double.parseDouble(getStringOr0(dataRevenue.get(0)[6])))
-                .gain(Double.parseDouble(getStringOr0(dataRevenue.get(0)[7])))
-                .bonus(Double.parseDouble(getStringOr0(dataRevenue.get(0)[8])))
-                .build();*/
     }
 
 
@@ -373,7 +299,7 @@ public class RevenueReporting {
 
             double mises = (r.getMises() != null ? r.getMises() : 0D);
             double bonus = (r.getBonus() != null ? r.getBonus() : 0D);
-            return mises - bonus;
+            return Math.abs(mises) - Math.abs(bonus);
         }
 
         return (r.getGrossGamingProduct() != null ? r.getGrossGamingProduct() : 0D);
