@@ -16,7 +16,7 @@ import sn.intouch.gu.lonaciapi.ejb.notification.models.LonaciNotification;
 @Data
 @SuperBuilder
 @AllArgsConstructor
-@Table(name="lonaci_trx_temp", uniqueConstraints = @UniqueConstraint(columnNames = {"idFromPartner", "type_transaction"}))
+@Table(name="lonaci_trx_temp", uniqueConstraints = @UniqueConstraint(columnNames = {"id_from_partner", "type_transaction"}))
 public class LonaciTrxTemp extends SuperLonaciTrx {
 
 	public static LonaciTrxTemp buildTrxFromNotification(LonaciNotification notification) {

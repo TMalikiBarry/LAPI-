@@ -35,6 +35,7 @@ public class SuperLonaciTrx implements Serializable {
     private String operateurLibelle;
 
 	// id_from_partner
+	@Column(name="id_from_partner")
     private String idFromPartner;
 
     // code_service
