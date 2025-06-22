@@ -2,6 +2,7 @@ package sn.intouch.gu.lonaciapi.ejb.notification.entities;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,10 +13,10 @@ import sn.intouch.gu.lonaciapi.ejb.notification.models.LonaciNotification;
 
 
 @Entity
-@Table(name="lonaci_trx_temp")
 @Data
 @SuperBuilder
 @AllArgsConstructor
+@Table(name="lonaci_trx_temp", uniqueConstraints = @UniqueConstraint(columnNames = {"idFromPartner", "type_transaction"}))
 public class LonaciTrxTemp extends SuperLonaciTrx {
 
 	public static LonaciTrxTemp buildTrxFromNotification(LonaciNotification notification) {
