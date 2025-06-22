@@ -35,11 +35,12 @@ public class LonaciTrxTempServiceBean implements LonaciTrxTempService {
 	}
 
 	@Override
-	public LonaciTrxTemp getTrxTempByIdFromPartnerBetweenDates(String idFromPartner, Date dateDeb, Date dateFin) {
-		String sql = "SELECT p FROM LonaciTrxTemp p where p.idFromPartner = :idFromPartner and date BETWEEN :dateDeb AND :dateFin";
+	public LonaciTrxTemp getTrxTempByIdFromPartnerAndTypeBetweenDates(String idFromPartner, String type, Date dateDeb, Date dateFin) {
+		String sql = "SELECT p FROM LonaciTrxTemp p where p.idFromPartner = :idFromPartner and p.typeTransaction = :type and date BETWEEN :dateDeb AND :dateFin";
 		try {
 			Query query = em.createQuery(sql, LonaciTrxTemp.class);
 			query.setParameter("idFromPartner", idFromPartner);
+			query.setParameter("type", type);
 			query.setParameter("dateDeb", dateDeb);
 			query.setParameter("dateFin", dateFin);
 			List<LonaciTrxTemp> lonaciTrxs = (List<LonaciTrxTemp>) query.getResultList();

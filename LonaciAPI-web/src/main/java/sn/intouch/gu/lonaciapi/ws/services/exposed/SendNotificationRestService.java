@@ -51,8 +51,8 @@ public class SendNotificationRestService {
                             notif = lonaciTrxTempService.saveTransaction(notif);
                             if (notif == null) {
                                 Date date = new Date(exchange.getDate());
-                                notif = lonaciTrxTempService.getTrxTempByIdFromPartnerBetweenDates(
-                                        exchange.getOperatorTransactionID(), atStartOfDay(date), atEndOfDay(date));
+                                notif = lonaciTrxTempService.getTrxTempByIdFromPartnerAndTypeBetweenDates(
+                                        exchange.getOperatorTransactionID(), exchange.getType(), atStartOfDay(date), atEndOfDay(date));
                                 System.out.println("Duplicated Notification :: " + notif);
                                 if (notif != null)
                                     token = notif.getLonaciTransactionID();
