@@ -258,8 +258,8 @@ public class BigQueryServiceBean implements BigQueryService{
                     "    END " +
                     "  ) as payoutCount, " +
                     "  SUM( " +
-                    "    CASE WHEN type.category = 'GAIN' AND type.direction = 'CREDIT' AND  trx.montant >= 500000" +
-                    "    THEN  trx.montant*0.15  " +
+                    "    CASE WHEN type.category = 'GAIN' AND type.direction = 'DEBIT' AND  ABS(trx.montant) >= 500000" +
+                    "    THEN   ABS(trx.montant)*0.15  " +
                     "    ELSE 0 " +
                     "    END " +
                     "  ) as withholding " +
