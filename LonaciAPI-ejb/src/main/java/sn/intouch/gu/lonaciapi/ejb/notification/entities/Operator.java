@@ -52,7 +52,7 @@ public class Operator implements Serializable {
 	private Boolean notified;
 	@Column(name = "compute_revenue")
 	@Builder.Default
-	private Boolean computeRevenue = true;
+	private Boolean isProvider = false;
 
 	@PreUpdate
 	private void updatedDate() {

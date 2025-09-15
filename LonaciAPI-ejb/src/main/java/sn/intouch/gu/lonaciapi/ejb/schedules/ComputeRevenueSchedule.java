@@ -58,8 +58,8 @@ public class ComputeRevenueSchedule {
     }
 
     public void computeForOperator(Date startDate, Date endDate, Operator operator) {
-        if (Boolean.FALSE.equals(operator.getComputeRevenue())) {
-            log.info("Revenue not computed for operator : {}", operator.getOperatorId());
+        if (Boolean.TRUE.equals(operator.getIsProvider())) {
+            log.info("Revenue not computed for operator : {} because it is a provider", operator.getOperatorId());
             return;
         }
         try {

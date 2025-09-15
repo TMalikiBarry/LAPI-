@@ -29,7 +29,7 @@ public class OperatorDTO implements Serializable {
                 .networkCode(networkCode)
                 .statut(status)
                 .country(country)
-                .computeRevenue(computeRevenue != null ? computeRevenue : true)
+                .isProvider(computeRevenue != null ? computeRevenue : true)
                 .build();
     }
 }
