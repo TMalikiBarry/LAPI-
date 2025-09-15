@@ -18,6 +18,7 @@ public class OperatorDTO implements Serializable {
     private Long creationDate, modificationDate;
     private String status;
     private String country;
+    private Boolean computeRevenue;
 
     public Operator fromDTO() {
         return Operator.builder()
@@ -28,6 +29,7 @@ public class OperatorDTO implements Serializable {
                 .networkCode(networkCode)
                 .statut(status)
                 .country(country)
+                .computeRevenue(computeRevenue != null ? computeRevenue : true)
                 .build();
     }
 }

@@ -50,6 +50,9 @@ public class Operator implements Serializable {
 	@Column(name = "country")
 	private String country;
 	private Boolean notified;
+	@Column(name = "compute_revenue")
+	@Builder.Default
+	private Boolean computeRevenue = true;
 
 	@PreUpdate
 	private void updatedDate() {

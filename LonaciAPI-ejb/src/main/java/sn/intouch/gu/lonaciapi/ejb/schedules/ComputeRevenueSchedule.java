@@ -58,7 +58,10 @@ public class ComputeRevenueSchedule {
     }
 
     public void computeForOperator(Date startDate, Date endDate, Operator operator) {
-
+        if (Boolean.FALSE.equals(operator.getComputeRevenue())) {
+            log.info("Revenue not computed for operator : {}", operator.getOperatorId());
+            return;
+        }
         try {
             Revenue revenueEntity = Revenue.builder()
                     .date(startDate)
