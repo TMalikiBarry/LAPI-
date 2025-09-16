@@ -50,7 +50,7 @@ public class Operator implements Serializable {
 	@Column(name = "country")
 	private String country;
 	private Boolean notified;
-	@Column(name = "compute_revenue")
+	@Column(name = "is_provider")
 	@Builder.Default
 	private Boolean isProvider = false;
 
