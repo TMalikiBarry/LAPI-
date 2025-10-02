@@ -11,6 +11,11 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Root;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Date;
@@ -144,12 +149,25 @@ String sqlQuery = "SELECT t, " +
 			aggSqlQuery += " AND t.type_transaction = :typeTransaction";
 		}
 
-		if (!StringUtils.hasText(sortBy) && !StringUtils.hasText(sortDir)) {
+		/*if (!StringUtils.hasText(sortBy) && !StringUtils.hasText(sortDir)) {
 			sqlQuery += " ORDER BY " + " " + sortBy + " " + sortDir;
 		} else {
 			sqlQuery += " ORDER BY t.date DESC";
-		}
+		}*/
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Tuple> req = cb.createTupleQuery();
+		Root<LonaciTrx> root = req.from(LonaciTrx.class);
 
+		if (StringUtils.hasText(sortBy) && StringUtils.hasText(sortDir)) {
+			Path<Object> path = root.get(sortBy);
+			if ("ASC".equalsIgnoreCase(sortDir)) {
+				req.orderBy(cb.asc(path));
+			} else {
+				req.orderBy(cb.desc(path));
+			}
+		} else {
+		req.orderBy(cb.desc(root.get("date")));
+			}
 
 		Query query = em.createQuery(sqlQuery);
 		Query aggQuery = em.createNativeQuery(aggSqlQuery);
