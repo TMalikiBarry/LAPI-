@@ -5,6 +5,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class CORSFilter implements Filter {
 
@@ -17,7 +19,15 @@ public class CORSFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
 
         HttpServletResponse resp = (HttpServletResponse) servletResponse;
-        resp.addHeader("Access-Control-Allow-Origin", "*");
+        String origin = request.getHeader("Origin");
+        List<String> allowedOrigins = Arrays.asList(
+                "https://dev.gutouch.net/bomonitoring/*",
+                "https://monitoring-lonaci.gutouch.net/*"
+        );
+        if (origin != null && allowedOrigins.contains(origin)) {
+            resp.addHeader("Access-Control-Allow-Origin", origin);
+        }
+        //resp.addHeader("Access-Control-Allow-Origin", "*");
         resp.addHeader("Access-Control-Allow-Methods", "*");
         resp.addHeader("Access-Control-Allow-Headers", "*");
         resp.addHeader("Strict-Transport-Security", "max-age=12960000; includeSubdomains");
