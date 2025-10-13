@@ -25,9 +25,7 @@ import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 import sn.intouch.gu.lonaciapi.ws.utils.AuthUtils;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @Log4j2
@@ -386,8 +384,9 @@ public class RevenueReporting {
             Operator operatorEntity = operatorService.findByOperatorID(operateur);
             if (operatorEntity == null)
                 return ResponseEntity.ok(new APIResponse<>(404, "Operator not found", ""));
-
-            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operatorEntity);
+            Map<String , Operator> operatorMap = new HashMap<>();
+            operatorMap.put(operatorEntity.getOperatorId(), operatorEntity);
+            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operatorMap);
         }else
             new ComputeRevenueSchedule().compute(startDate, endDate);
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", ""));
