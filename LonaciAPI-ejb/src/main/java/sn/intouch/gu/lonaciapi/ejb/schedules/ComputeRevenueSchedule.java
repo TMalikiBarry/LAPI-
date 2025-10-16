@@ -48,7 +48,7 @@ public class ComputeRevenueSchedule {
     }
 
     public void compute(Date startDate, Date endDate) {
-        log.info("Running JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
+        log.info("Running NEW JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
         Iterable<Operator> operators = operatorService.getAll(null);
         Map<String, Operator> operatorsMap = new HashMap<>();
         for (Operator operator : operators) {
