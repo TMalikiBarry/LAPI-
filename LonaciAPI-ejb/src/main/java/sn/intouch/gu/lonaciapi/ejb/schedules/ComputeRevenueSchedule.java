@@ -80,6 +80,10 @@ public class ComputeRevenueSchedule {
             for (Map<String, String> values : valuesList) {
                 log.info("Processing operator revenue : {}", values.get("operateur_id"));
                 Operator operator = operators.get(values.get("operateur_id"));
+                if (operator == null) {
+                    log.warn("No operator found in operators. id : {}", values.get("operateur_id"));
+                    continue;
+                }
 
                 Double misesOverallVolume = Double.valueOf(values.get("mises"));
                 Double gainsOverallVolume = Double.valueOf(values.get("gain"));
