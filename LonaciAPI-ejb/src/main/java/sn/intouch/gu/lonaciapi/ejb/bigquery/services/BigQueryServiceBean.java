@@ -402,6 +402,7 @@ public class BigQueryServiceBean implements BigQueryService{
                     "    ELSE 0 " +
                     "    END " +
                     "  ) as withholding " +
+                    (operators != null ? ", trx.operateur_id as operateur_id " : "") +
                     "  FROM " + connection.getLonaciTableRef() + " trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code " +
                     "  WHERE trx.date BETWEEN @startDate AND @endDate ";
 
