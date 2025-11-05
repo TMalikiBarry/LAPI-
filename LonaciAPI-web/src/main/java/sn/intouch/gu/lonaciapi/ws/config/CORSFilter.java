@@ -1,5 +1,6 @@
 package sn.intouch.gu.lonaciapi.ws.config;
 
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
@@ -15,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
+@Log4j2
 public class CORSFilter implements Filter {
     private static final String URL_CORS_ORIGIN = "URL_CORS_ORIGIN";
     private static String lonaciUrlCorsOrigin= null;
