@@ -15,9 +15,7 @@ import sn.intouch.gu.lonaciapi.ejb.parameter.services.ComputeParameterService;
 import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Timer;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 @Log4j2
@@ -34,8 +32,8 @@ public class ComputeRevenueSchedule {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
     private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
 
-    // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
-    @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
+    @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
+    // @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
     public void launch(Timer timer) {
 
         Calendar cal = Calendar.getInstance(); // locale-specific
@@ -50,97 +48,112 @@ public class ComputeRevenueSchedule {
     }
 
     public void compute(Date startDate, Date endDate) {
-        log.info("Running JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
+        log.info("Running NEW JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
         Iterable<Operator> operators = operatorService.getAll(null);
+        Map<String, Operator> operatorsMap = new HashMap<>();
         for (Operator operator : operators) {
-            computeForOperator(startDate, endDate, operator);
+            operatorsMap.put(operator.getOperatorId(), operator);
         }
+        computeForOperator(startDate, endDate, operatorsMap);
     }
 
-    public void computeForOperator(Date startDate, Date endDate, Operator operator) {
-        if (Boolean.TRUE.equals(operator.getIsProvider())) {
-            log.info("Revenue not computed for operator : {} because it is a provider", operator.getOperatorId());
-            return;
-        }
+    public void computeForOperator(Date startDate, Date endDate, Map<String, Operator> operators) {
+
         try {
-            Revenue revenueEntity = Revenue.builder()
-                    .date(startDate)
-                    .endDate(endDate)
-                    .operator(operator.getOperatorId())
-                    .country(operator.getCountry())
-                    .build();
-            revenueEntity = revenueService.update(revenueEntity);
-            Map<String, String> values = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operator.getOperatorId(), null, Boolean.TRUE, operator.getCountry());
-            log.info("Revenue Computed :: {}", new Gson().toJson(values));
-            if (values == null || values.isEmpty()) {
-                log.warn("No revenue found for operator : {}", operator.getOperatorId());
+            Map<String, Revenue> revenues = new HashMap<>();
+            for (Operator operator : operators.values()) {
+                Revenue revenueEntity = Revenue.builder()
+                        .date(startDate)
+                        .endDate(endDate)
+                        .operator(operator.getOperatorId())
+                        .country(operator.getCountry())
+                        .build();
+                revenues.put(operator.getOperatorId(), revenueService.update(revenueEntity));
+            }
+            List<Map<String, String>> valuesList = bigQueryService.getSumBetweenDatesAllCategories(startDate, endDate, operators.keySet(), null, Boolean.TRUE);
+            log.info("Revenue Computed :: {}", new Gson().toJson(valuesList));
+            if (valuesList == null || valuesList.isEmpty()) {
+                log.warn("No revenue found for operators");
                 return;
             }
-            Double misesOverallVolume = Double.valueOf(values.get("mises"));
-            Double gainsOverallVolume = Double.valueOf(values.get("gain"));
-            Double bonusOverallVolume = Double.valueOf(values.get("bonus"));
-            Double payinOverallVolume = Double.valueOf(values.get("payin"));
-            Double payoutOverallVolume = Double.valueOf(values.get("payout"));
-            Double withholding = Double.valueOf(values.get("withholding"));
 
-            Double grossGamingProduct;
-            Double integratorRemuneration;
-            Double revenue;
-            Double royalties;
+            for (Map<String, String> values : valuesList) {
+                log.info("Processing operator revenue : {}", values.get("operateur_id"));
+                Operator operator = operators.get(values.get("operateur_id"));
+                if (operator == null) {
+                    log.warn("No operator found in operators. id : {}", values.get("operateur_id"));
+                    continue;
+                }
 
-            ComputeParameter computeParameter = computeParameterService.getParameterByOperator(operator.getOperatorId());
-            if (computeParameter == null) {
-                log.info("Computing default revenue for country : {}", operator.getCountry());
-                if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
-                    grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));
-                    integratorRemuneration = 0.04 * Math.abs(payinOverallVolume) + 0.02 * Math.abs(payoutOverallVolume);
-                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
-                    royalties = 0.5 * revenue;
-                } else if (BF_COUNTRY_CODE.equals(operator.getCountry())) {
-                    log.warn("No revenue default computation for country : {}", operator.getCountry());
-                    return;
+                Double misesOverallVolume = Double.valueOf(values.get("mises"));
+                Double gainsOverallVolume = Double.valueOf(values.get("gain"));
+                Double bonusOverallVolume = Double.valueOf(values.get("bonus"));
+                Double payinOverallVolume = Double.valueOf(values.get("payin"));
+                Double payoutOverallVolume = Double.valueOf(values.get("payout"));
+                Double withholding = Double.valueOf(values.get("withholding"));
+
+                Double grossGamingProduct;
+                Double integratorRemuneration;
+                Double revenue;
+                Double royalties;
+
+                ComputeParameter computeParameter = computeParameterService.getParameterByOperator(operator.getOperatorId());
+                if (computeParameter == null) {
+                    log.info("Computing default revenue for country : {}", operator.getCountry());
+                    if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
+                        grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume) + Math.abs(bonusOverallVolume));
+                        integratorRemuneration = 0.04 * Math.abs(payinOverallVolume) + 0.02 * Math.abs(payoutOverallVolume);
+                        revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                        royalties = 0.5 * revenue;
+                    } else if (BF_COUNTRY_CODE.equals(operator.getCountry())) {
+                        log.warn("No revenue default computation for country : {}", operator.getCountry());
+                        return;
+                    } else {
+                        log.warn("Country {} is not supported for computing revenue.", operator.getCountry());
+                        return;
+                    }
                 } else {
-                    log.warn("Country {} is not supported for computing revenue.", operator.getCountry());
-                    return;
+                    log.info("Computing revenue for operator : {}", operator.getOperatorId());
+                    if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
+                        grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume) + Math.abs(bonusOverallVolume));
+                        ;
+                        integratorRemuneration = computeParameter.getPaymentRate() * (computeParameter.getPaymentFees() * Math.abs(payinOverallVolume))
+                                + computeParameter.getCashinRate() * (computeParameter.getCashinFees() * Math.abs(payoutOverallVolume));
+                        revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                        royalties = computeParameter.getRoyaltyRate() * revenue;
+                    } else if (Boolean.TRUE.equals(operator.getNotified())) {
+                        grossGamingProduct = computeParameter.getPaymentRate() * (Math.abs(misesOverallVolume) - Math.abs(bonusOverallVolume))
+                                - computeParameter.getCashinRate() * Math.abs(gainsOverallVolume);
+                        ;
+                        integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
+                                + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);
+                        revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                        royalties = computeParameter.getRoyaltyRate() * revenue;
+                    } else {
+                        grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(payinOverallVolume)
+                                - computeParameter.getCashinRate() * Math.abs(payoutOverallVolume);
+                        ;
+                        integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
+                                + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);
+                        revenue = grossGamingProduct - Math.abs(integratorRemuneration);
+                        royalties = computeParameter.getRoyaltyRate() * revenue;
+                        grossGamingProduct = 0D;
+                    }
                 }
-            } else {
-                log.info("Computing revenue for operator : {}", operator.getOperatorId());
-                if (CI_COUNTRY_CODE.equals(operator.getCountry())) {
-                    grossGamingProduct = Math.abs(misesOverallVolume) - (Math.abs(gainsOverallVolume)  + Math.abs(bonusOverallVolume));;
-                    integratorRemuneration = computeParameter.getPaymentRate() * (computeParameter.getPaymentFees() * Math.abs(payinOverallVolume))
-                            + computeParameter.getCashinRate() * (computeParameter.getCashinFees() * Math.abs(payoutOverallVolume));
-                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
-                    royalties = computeParameter.getRoyaltyRate() * revenue;
-                } else if(Boolean.TRUE.equals(operator.getNotified())){
-                    grossGamingProduct = computeParameter.getPaymentRate() * (Math.abs(misesOverallVolume) - Math.abs(bonusOverallVolume))
-                            - computeParameter.getCashinRate() * Math.abs(gainsOverallVolume);;
-                    integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
-                            + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);
-                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
-                    royalties = computeParameter.getRoyaltyRate() * revenue;
-                } else {
-                    grossGamingProduct = computeParameter.getPaymentRate() * Math.abs(payinOverallVolume)
-                            - computeParameter.getCashinRate() * Math.abs(payoutOverallVolume);;
-                    integratorRemuneration = computeParameter.getPaymentFees() * Math.abs(payinOverallVolume)
-                            + computeParameter.getCashinFees() * Math.abs(payoutOverallVolume);
-                    revenue = grossGamingProduct - Math.abs(integratorRemuneration);
-                    royalties = computeParameter.getRoyaltyRate() * revenue;
-                    grossGamingProduct = 0D;
-                }
+                Revenue revenueEntity = revenues.get(operator.getOperatorId());
+                revenueEntity.setGrossGamingProduct(grossGamingProduct);
+                revenueEntity.setIntegratorRemuneration(integratorRemuneration);
+                revenueEntity.setRevenue(revenue);
+                revenueEntity.setRoyalties(royalties);
+                revenueEntity.setPayin(payinOverallVolume);
+                revenueEntity.setPayout(payoutOverallVolume);
+                revenueEntity.setMises(misesOverallVolume);
+                revenueEntity.setGain(gainsOverallVolume);
+                revenueEntity.setBonus(bonusOverallVolume);
+                revenueEntity.setWithholding(withholding);
+
+                revenueService.update(revenueEntity);
             }
-
-            revenueEntity.setGrossGamingProduct(grossGamingProduct);
-            revenueEntity.setIntegratorRemuneration(integratorRemuneration);
-            revenueEntity.setRevenue(revenue);
-            revenueEntity.setRoyalties(royalties);
-            revenueEntity.setPayin(payinOverallVolume);
-            revenueEntity.setPayout(payoutOverallVolume);
-            revenueEntity.setMises(misesOverallVolume);
-            revenueEntity.setGain(gainsOverallVolume);
-            revenueEntity.setBonus(bonusOverallVolume);
-            revenueEntity.setWithholding(withholding);
-
-            revenueService.update(revenueEntity);
         } catch (Exception e) {
             log.error("An error occurred while computing revenue :: ", e);
         }
