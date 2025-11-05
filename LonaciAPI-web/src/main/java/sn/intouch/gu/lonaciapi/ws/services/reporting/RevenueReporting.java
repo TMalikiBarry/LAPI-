@@ -25,9 +25,7 @@ import sn.intouch.gu.lonaciapi.ws.dto.TimedResponse;
 import sn.intouch.gu.lonaciapi.ws.models.APIResponse;
 import sn.intouch.gu.lonaciapi.ws.utils.AuthUtils;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @Log4j2
@@ -35,7 +33,6 @@ public class RevenueReporting {
 
     private final RevenueService revenueService = (RevenueService) JNDIUtils.lookUpEJB(EJBRegistry.RevenueServiceBean);
     private final OperatorService operatorService = (OperatorService) JNDIUtils.lookUpEJB(EJBRegistry.OperatorServiceBean);
-    private final LonaciTrxService lonaciTrxService = (LonaciTrxService) JNDIUtils.lookUpEJB(EJBRegistry.LonaciTrxServiceBean);
 
     @RequestMapping(value = {"/api/v1/aggregation/revenue", "/api/v2/aggregation/revenue"}, method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<APIResponse<RevenueResponse>> revenue(
@@ -386,8 +383,9 @@ public class RevenueReporting {
             Operator operatorEntity = operatorService.findByOperatorID(operateur);
             if (operatorEntity == null)
                 return ResponseEntity.ok(new APIResponse<>(404, "Operator not found", ""));
-
-            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operatorEntity);
+            Map<String , Operator> operatorMap = new HashMap<>();
+            operatorMap.put(operatorEntity.getOperatorId(), operatorEntity);
+            new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operatorMap);
         }else
             new ComputeRevenueSchedule().compute(startDate, endDate);
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", ""));
