@@ -32,8 +32,8 @@ public class ComputeRevenueSchedule {
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
     private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
 
-    @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
-    // @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
+    // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
+    @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
     public void launch(Timer timer) {
 
         Calendar cal = Calendar.getInstance(); // locale-specific
