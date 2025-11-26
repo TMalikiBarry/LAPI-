@@ -13,7 +13,6 @@ import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
-import sn.intouch.gu.lonaciapi.ejb.notification.services.LonaciTrxService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
 import sn.intouch.gu.lonaciapi.ejb.schedules.ComputeRevenueSchedule;
@@ -388,6 +387,42 @@ public class RevenueReporting {
             new ComputeRevenueSchedule().computeForOperator(startDate, endDate, operatorMap);
         }else
             new ComputeRevenueSchedule().compute(startDate, endDate);
+        return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", ""));
+    }
+
+    @RequestMapping(value = {"/api/v2/aggregation/launch-month-schedule"}, method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<APIResponse<String>> testMonth(
+            @RequestParam(value = "date") String date,
+            @RequestParam(value = "operateur", required = false) String operateur
+    ) throws RuntimeException {
+        Date startDate;
+        Date endDate;
+        try {
+            endDate = new Date(Long.parseLong(date));
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(endDate);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            endDate = new Date(cal.getTimeInMillis());
+            cal.add(Calendar.DAY_OF_MONTH, -30);
+            startDate = new Date(cal.getTimeInMillis());
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        log.info("Start Date :: {}", startDate);
+        log.info("End Date :: {}", endDate);
+        Map<String , Operator> operatorMap = null;
+        if (operateur != null) {
+            Operator operatorEntity = operatorService.findByOperatorID(operateur);
+            if (operatorEntity == null)
+                return ResponseEntity.ok(new APIResponse<>(404, "Operator not found", ""));
+            operatorMap = new HashMap<>();
+            operatorMap.put(operatorEntity.getOperatorId(), operatorEntity);
+        }
+        new ComputeRevenueSchedule().reComputeAllBetweenDates(startDate, endDate, operatorMap);
         return ResponseEntity.ok(new APIResponse<>(200, "SUCCESS", ""));
     }
 

@@ -25,6 +25,9 @@ public interface BigQueryService {
     List<Map<String, String>> getSumBetweenDatesAllCategories(Date startDate, Date endDate, Set<String> operators, String type,
                                                               Boolean computeVolume);
 
+    List<Map<String, String>> getSumBetweenDatesGroupedByHour(Date startDate, Date endDate, Set<String> operators, String type,
+                                                              Boolean computeVolume);
+
     Integer getActiveClients(Date startDate, Date endDate, String operator, String type, String country);
 
     List<Map<String, String>> getSumClientsBetweenDates(Date startDate, Date endDate, String operator, String type);

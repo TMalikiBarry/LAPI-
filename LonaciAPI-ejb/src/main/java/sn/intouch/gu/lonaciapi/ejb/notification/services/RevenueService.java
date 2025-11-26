@@ -16,4 +16,6 @@ public interface RevenueService {
 	List<Object[]> sumByDateAndOperator(Date startDate, Date endDate, String operator, String country);
 
     List<Revenue> curveByDateAndOperator(Date startDate, Date endDate, String operator, String country);
+
+    void updateRevenueRow(Revenue revenueEntity);
 }

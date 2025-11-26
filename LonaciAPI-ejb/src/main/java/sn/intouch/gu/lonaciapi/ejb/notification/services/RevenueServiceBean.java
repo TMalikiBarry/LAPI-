@@ -71,4 +71,46 @@ public class RevenueServiceBean implements RevenueService {
 
         return query.getResultList();
     }
+
+    @Override
+    public void updateRevenueRow(Revenue revenueEntity) {
+        try {
+            String jpql = "UPDATE Revenue r SET " +
+                    "r.grossGamingProduct = :ggp, " +
+                    "r.integratorRemuneration = :integratorRem, " +
+                    "r.revenue = :revenue, " +
+                    "r.royalties = :royalties, " +
+                    "r.payin = :payin, " +
+                    "r.payout = :payout, " +
+                    "r.mises = :mises, " +
+                    "r.gain = :gain, " +
+                    "r.bonus = :bonus, " +
+                    "r.withholding = :withholding, " +
+                    "r.country = :country " +
+                    "WHERE r.operator = :operator " +
+                    "AND r.date = :date " +
+                    "AND r.endDate = :endDate";
+
+            em.createQuery(jpql)
+                    .setParameter("ggp", revenueEntity.getGrossGamingProduct())
+                    .setParameter("integratorRem", revenueEntity.getIntegratorRemuneration())
+                    .setParameter("revenue", revenueEntity.getRevenue())
+                    .setParameter("royalties", revenueEntity.getRoyalties())
+                    .setParameter("payin", revenueEntity.getPayin())
+                    .setParameter("payout", revenueEntity.getPayout())
+                    .setParameter("mises", revenueEntity.getMises())
+                    .setParameter("gain", revenueEntity.getGain())
+                    .setParameter("bonus", revenueEntity.getBonus())
+                    .setParameter("withholding", revenueEntity.getWithholding())
+                    .setParameter("country", revenueEntity.getCountry())
+                    .setParameter("operator", revenueEntity.getOperator())
+                    .setParameter("date", revenueEntity.getDate())
+                    .setParameter("endDate", revenueEntity.getEndDate())
+                    .executeUpdate();
+            em.clear();
+        } catch (Exception e) {
+            log.error("Error while updating revenue row", e);
+        }
+    }
+
 }
