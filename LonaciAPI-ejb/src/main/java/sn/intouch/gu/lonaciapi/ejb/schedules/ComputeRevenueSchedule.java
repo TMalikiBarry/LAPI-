@@ -191,7 +191,7 @@ public class ComputeRevenueSchedule {
     }
 
     public void reComputeAllBetweenDates(Date startDate, Date endDate, Map<String, Operator> operatorsMap) {
-        log.info("Running NEW JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
+        log.info("Running MONTHLY JOB for computing revenue at : START DATE {} AND END DATE : {}", startDate, endDate);
         Iterable<Operator> operators = operatorService.getAll(null);
         if (operatorsMap == null) {
             operatorsMap = new HashMap<>();
@@ -199,6 +199,7 @@ public class ComputeRevenueSchedule {
                 operatorsMap.put(operator.getOperatorId(), operator);
             }
         }
+        log.info("Running MONTHLY JOB for computing revenue for operators : {} ", new Gson().toJson(operatorsMap.keySet()));
         try {
             List<Map<String, String>> valuesList = bigQueryService.getSumBetweenDatesGroupedByHour(startDate, endDate, operatorsMap.keySet(), null, Boolean.TRUE);
             log.info("Revenue Computed :: {}", new Gson().toJson(valuesList));
