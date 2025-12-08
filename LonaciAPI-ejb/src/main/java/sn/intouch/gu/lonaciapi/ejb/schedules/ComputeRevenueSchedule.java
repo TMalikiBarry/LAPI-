@@ -171,8 +171,8 @@ public class ComputeRevenueSchedule {
 
 
 
-    @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
-    // @Schedule(dayOfMonth = "14", hour = "3", minute = "0", persistent = true)
+    // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
+    @Schedule(dayOfMonth = "14", hour = "3", minute = "0", persistent = true)
     public void launchEvery14h(Timer timer) {
         log.info("Starting monthly revenue reconciliation for missed transactions");
 
