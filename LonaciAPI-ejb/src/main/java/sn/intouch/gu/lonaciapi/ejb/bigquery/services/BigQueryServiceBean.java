@@ -404,7 +404,8 @@ public class BigQueryServiceBean implements BigQueryService{
                     "  ) as withholding " +
                     (operators != null ? ", trx.operateur_id as operateur_id " : "") +
                     "  FROM " + connection.getLonaciTableRef() + " trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code " +
-                    "  WHERE trx.date BETWEEN @startDate AND @endDate ";
+                    "  WHERE DATE(trx.date) BETWEEN DATE(@startDate) AND DATE(@endDate) " +
+                    "  AND trx.date BETWEEN @startDate AND @endDate ";
 
             if (type != null)
                 query += " AND trx.type_transaction = @type";
@@ -543,7 +544,8 @@ public class BigQueryServiceBean implements BigQueryService{
                     "  ) as withholding " +
                     (operators != null ? ", trx.operateur_id as operateur_id " : "") +
                     "  FROM " + connection.getLonaciTableRef() + " trx LEFT JOIN " + connection.getLonaciTypeTableRef() + " type ON trx.type_transaction = type.code " +
-                    "  WHERE trx.date BETWEEN @startDate AND @endDate ";
+                    "  WHERE DATE(trx.date) BETWEEN DATE(@startDate) AND DATE(@endDate) " +
+                    "  AND trx.date BETWEEN @startDate AND @endDate ";
 
             if (type != null)
                 query += " AND trx.type_transaction = @type";
