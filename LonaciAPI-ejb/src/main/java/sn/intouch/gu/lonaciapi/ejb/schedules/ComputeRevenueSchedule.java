@@ -7,10 +7,13 @@ import sn.intouch.gu.lonaciapi.ejb.jndiutils.EJBRegistry;
 import sn.intouch.gu.lonaciapi.ejb.jndiutils.JNDIUtils;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Operator;
 import sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue;
+import sn.intouch.gu.lonaciapi.ejb.notification.entities.TempTable;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.OperatorService;
 import sn.intouch.gu.lonaciapi.ejb.notification.services.RevenueService;
+import sn.intouch.gu.lonaciapi.ejb.notification.services.TempTableService;
 import sn.intouch.gu.lonaciapi.ejb.parameter.entities.ComputeParameter;
 import sn.intouch.gu.lonaciapi.ejb.parameter.services.ComputeParameterService;
+import sn.intouch.gu.lonaciapi.ejb.utils.DateUtil;
 import sn.intouch.gu.lonaciapi.ejb.utils.Utils;
 
 import javax.ejb.Schedule;
@@ -29,6 +32,8 @@ public class ComputeRevenueSchedule {
             .lookUpEJB(EJBRegistry.OperatorServiceBean);
     private final RevenueService revenueService = (RevenueService) JNDIUtils
             .lookUpEJB(EJBRegistry.RevenueServiceBean);
+    private final TempTableService tempTableService = (TempTableService) JNDIUtils
+            .lookUpEJB(EJBRegistry.TempTableService);
 
     private final BigQueryService bigQueryService = (BigQueryService) JNDIUtils.lookUpEJB(EJBRegistry.BigQueryServiceBean);
     private final ComputeParameterService computeParameterService = (ComputeParameterService) JNDIUtils.lookUpEJB(EJBRegistry.ComputeParameterServiceBean);
@@ -36,7 +41,12 @@ public class ComputeRevenueSchedule {
     // @Schedule(dayOfWeek = "*", hour = "*", minute = "*/2", second = "59", persistent = false)
     @Schedule(dayOfWeek = "*", hour = "*/1", minute = "15", persistent = true)
     public void launch(Timer timer) {
-
+        log.info("Starting daily revenue compute for transactions");
+        TempTable tempTable = new TempTable("DAILY_" + DateUtil.SIMPLE_DATE_FORMAT_TO_MINUTE.format(new Date()));
+        if (!tempTableService.add(tempTable)) {
+            log.info("Add temp table failed. The compute already started by another middle for day");
+            return;
+        }
         Calendar cal = Calendar.getInstance(); // locale-specific
         cal.setTime(new Date());
         cal.set(Calendar.MINUTE, 0);
@@ -175,7 +185,11 @@ public class ComputeRevenueSchedule {
     @Schedule(dayOfMonth = "14", hour = "3", minute = "0", persistent = true)
     public void launchEvery14h(Timer timer) {
         log.info("Starting monthly revenue reconciliation for missed transactions");
-
+        TempTable tempTable = new TempTable("MONTHLY_" + DateUtil.SIMPLE_DATE_FORMAT_TO_MINUTE.format(new Date()));
+        if (!tempTableService.add(tempTable)) {
+            log.info("Add temp table failed. The compute already started by another middle for month");
+            return;
+        }
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         cal.set(Calendar.HOUR_OF_DAY, 0);

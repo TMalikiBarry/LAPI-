@@ -29,6 +29,7 @@
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.SuperLonaciTrx</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.TypeTrx</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.Revenue</class>
+        <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.TempTable</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.CategoryType</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.Country</class>
         <class>sn.intouch.gu.lonaciapi.ejb.notification.entities.CodeServiceMOMO</class>

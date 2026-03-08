@@ -13,6 +13,7 @@ public class DateUtil {
 
     public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     public static final SimpleDateFormat SIMPLE_DATE_FORMAT_WITH_HOUR = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");
+    public static final SimpleDateFormat SIMPLE_DATE_FORMAT_TO_MINUTE = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
 
     public static final long DAY_INTERVAL_IN_MILLIS = 1000 * 3600 * 24;
